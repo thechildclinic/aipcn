@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AIPC Healthcare Ecosystem - Role-Based Access</title>
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+        }
+        .animate-spin {
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        // Import the role-based application
+        const { default: RoleBasedApp } = await import('./components/RoleBasedApp.tsx');
+
+        // Render the application
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<RoleBasedApp />);
+    </script>
+
+    <script>
+        // Add some basic error handling
+        window.addEventListener('error', function(e) {
+            console.error('Application error:', e.error);
+        });
+
+        // Add loading indicator
+        document.addEventListener('DOMContentLoaded', function() {
+            const root = document.getElementById('root');
+            if (!root.hasChildNodes()) {
+                root.innerHTML = `
+                    <div class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
+                        <div class="text-center">
+                            <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                            <h2 class="text-xl font-semibold text-gray-900 mb-2">Loading AIPC Healthcare Ecosystem</h2>
+                            <p class="text-gray-600">Initializing role-based access system...</p>
+                        </div>
+                    </div>
+                `;
+            }
+        });
+    </script>
+</body>
+</html>

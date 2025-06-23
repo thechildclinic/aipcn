@@ -1,0 +1,8 @@
+{
+  "name": "Copy of Primary Care Assistant",
+  "description": "An intelligent assistant for primary care, helping patients describe symptoms, get provisional insights, find clinics, and book appointments with AI-driven support throughout the process.",
+  "requestFramePermissions": [
+    "microphone"
+  ],
+  "prompt": ""
+}
