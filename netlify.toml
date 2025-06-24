@@ -1,9 +1,14 @@
 [build]
+  base = "AIPC"
   publish = "dist"
-  command = "npm run build"
+  command = "npm ci && npm run build"
 
 [build.environment]
   NODE_VERSION = "18"
+  NODE_ENV = "production"
+  VITE_API_BASE_URL = "https://aipcn.onrender.com"
+  VITE_APP_NAME = "AIPC Healthcare Platform"
+  VITE_DEMO_MODE = "true"
 
 [[redirects]]
   from = "/api/*"
