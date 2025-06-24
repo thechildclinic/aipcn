@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: aipc-backend
+    env: node
+    plan: free
+    rootDir: AIPC/backend
+    buildCommand: npm install
+    startCommand: node basic-server.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
