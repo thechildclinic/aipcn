@@ -1,0 +1,393 @@
+{
+  "info": {
+    "name": "AI-Powered Care Backend API",
+    "description": "Comprehensive API collection for the AI-Powered Care healthcare marketplace backend",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "version": "1.0.0"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:5000/api",
+      "type": "string"
+    },
+    {
+      "key": "adminToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "patientToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "doctorToken",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "Admin Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    pm.collectionVariables.set('adminToken', response.data.token);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"email\": \"admin@aipc.com\",\n    \"password\": \"Admin123!\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "login"]
+            }
+          }
+        },
+        {
+          "name": "Patient Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    pm.collectionVariables.set('patientToken', response.data.token);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"email\": \"patient1@example.com\",\n    \"password\": \"Patient123!\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "login"]
+            }
+          }
+        },
+        {
+          "name": "Doctor Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    pm.collectionVariables.set('doctorToken', response.data.token);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"email\": \"dr.smith@aipc.com\",\n    \"password\": \"Doctor123!\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "login"]
+            }
+          }
+        },
+        {
+          "name": "Get User Profile",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{patientToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/profile",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "profile"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "AI Features",
+      "item": [
+        {
+          "name": "Symptom Checker",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{patientToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"symptoms\": [\"headache\", \"fever\", \"fatigue\"],\n    \"duration\": \"2 days\",\n    \"severity\": \"moderate\",\n    \"patientAge\": 35,\n    \"patientGender\": \"female\",\n    \"medicalHistory\": [\"hypertension\"]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/symptom-checker",
+              "host": ["{{baseUrl}}"],
+              "path": ["symptom-checker"]
+            }
+          }
+        },
+        {
+          "name": "Generate Treatment Plan",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{doctorToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"symptoms\": [\"persistent cough\", \"shortness of breath\"],\n    \"diagnosis\": \"possible respiratory infection\",\n    \"patientProfile\": {\n        \"age\": 35,\n        \"gender\": \"female\",\n        \"allergies\": [\"penicillin\"],\n        \"currentMedications\": [\"lisinopril\"]\n    }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/treatment-plans",
+              "host": ["{{baseUrl}}"],
+              "path": ["treatment-plans"]
+            }
+          }
+        },
+        {
+          "name": "Doctor Assist",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{doctorToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"patientSymptoms\": \"chest pain, shortness of breath\",\n    \"vitalSigns\": {\n        \"bloodPressure\": \"140/90\",\n        \"heartRate\": 95,\n        \"temperature\": 98.6\n    },\n    \"requestType\": \"differential_diagnosis\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/doctor-assist",
+              "host": ["{{baseUrl}}"],
+              "path": ["doctor-assist"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Patient Management",
+      "item": [
+        {
+          "name": "Get My Patient Profile",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{patientToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/patients/me",
+              "host": ["{{baseUrl}}"],
+              "path": ["patients", "me"]
+            }
+          }
+        },
+        {
+          "name": "Update Patient Profile",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{patientToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"phone\": \"+1-555-0199\",\n    \"emergencyContact\": \"Updated Emergency Contact\",\n    \"allergies\": [\"Penicillin\", \"Shellfish\", \"Latex\"]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/patients/me",
+              "host": ["{{baseUrl}}"],
+              "path": ["patients", "me"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Order Management",
+      "item": [
+        {
+          "name": "Create Pharmacy Order",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{patientToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"type\": \"pharmacy\",\n    \"prescriptionData\": {\n        \"medications\": [\n            {\n                \"name\": \"Amoxicillin\",\n                \"dosage\": \"500mg\",\n                \"frequency\": \"3 times daily\",\n                \"duration\": \"7 days\"\n            }\n        ],\n        \"prescribingDoctor\": \"Dr. John Smith\",\n        \"notes\": \"Take with food\"\n    },\n    \"deliveryAddress\": \"123 Main St, Boston, MA 02101\",\n    \"urgency\": \"standard\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/orders",
+              "host": ["{{baseUrl}}"],
+              "path": ["orders"]
+            }
+          }
+        },
+        {
+          "name": "Get My Orders",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{patientToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/orders?limit=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["orders"],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Provider Management",
+      "item": [
+        {
+          "name": "Get Providers",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/providers?type=pharmacy&limit=5",
+              "host": ["{{baseUrl}}"],
+              "path": ["providers"],
+              "query": [
+                {
+                  "key": "type",
+                  "value": "pharmacy"
+                },
+                {
+                  "key": "limit",
+                  "value": "5"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Provider Matching",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"orderType\": \"pharmacy\",\n    \"location\": {\n        \"latitude\": 42.3601,\n        \"longitude\": -71.0589\n    },\n    \"requirements\": {\n        \"deliveryRequired\": true,\n        \"urgency\": \"standard\"\n    }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/providers/match",
+              "host": ["{{baseUrl}}"],
+              "path": ["providers", "match"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

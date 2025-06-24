@@ -5,8 +5,10 @@ import symptomCheckerRoutes from './routes/symptomCheckerRoutes';
 import prescriptionRoutes from './routes/prescriptionRoutes';
 import doctorAssistRoutes from './routes/doctorAssistRoutes';
 import marketplaceRoutes from './routes/marketplaceRoutes'; // New
-import orderRoutes from './routes/orderRoutes'; // New
+import orderRoutes from './routes/orders'; // New
 import configRoutes from './routes/configRoutes'; // New
+import authRoutes from './routes/auth'; // Authentication routes
+import patientRoutes from './routes/patients'; // Patient routes
 
 // Validate configuration before starting server
 validateConfig();
@@ -58,6 +60,8 @@ app.use((req: Request, res: Response, next: NextFunction) => {
 });
 
 // API Routes
+app.use('/api/auth', authRoutes); // Authentication routes
+app.use('/api/patients', patientRoutes); // Patient management routes
 app.use('/api/symptom-checker', symptomCheckerRoutes);
 app.use('/api/prescription', prescriptionRoutes);
 app.use('/api/doctor-assist', doctorAssistRoutes);
