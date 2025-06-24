@@ -1,13 +1,15 @@
-# Render.com deployment configuration for AIPC Frontend
-# This deploys the complete React healthcare platform
+# Render.com deployment configuration for AIPC Healthcare Platform Frontend
+# Complete React application with AI-powered healthcare features
 services:
   - type: web
     name: aipc-healthcare-platform
     env: node
     region: oregon
-    plan: free
-    buildCommand: npm install && npm run build
-    startCommand: npm start
+    plan: starter
+    branch: main
+    rootDir: AIPC
+    buildCommand: npm ci && npm run build
+    startCommand: node serve.js
     envVars:
       - key: NODE_ENV
         value: production
@@ -19,5 +21,9 @@ services:
         value: true
       - key: VITE_ENABLE_MOCK_DATA
         value: false
+      - key: PORT
+        value: 10000
     # Health check configuration
     healthCheckPath: /health
+    # Auto-deploy on push
+    autoDeploy: true
