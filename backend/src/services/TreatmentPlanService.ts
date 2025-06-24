@@ -1,4 +1,4 @@
-import { patientService } from './index';
+import { PatientService } from './PatientService';
 
 export interface Symptom {
   name: string;
@@ -50,6 +50,12 @@ export interface TreatmentPlan {
 }
 
 export class TreatmentPlanService {
+  private patientService: PatientService;
+
+  constructor() {
+    this.patientService = new PatientService();
+  }
+
   /**
    * Generate comprehensive treatment plan based on symptoms and patient history
    */
@@ -64,7 +70,7 @@ export class TreatmentPlanService {
     }
   ): Promise<TreatmentPlan> {
     // Get patient information
-    const patient = await patientService.findByIdWithUser(patientId);
+    const patient = await this.patientService.findByIdWithUser(patientId);
     
     const medicalHistory: MedicalHistory = {
       conditions: [], // Would be extracted from patient.medicalHistory

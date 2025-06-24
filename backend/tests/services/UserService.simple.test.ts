@@ -54,6 +54,11 @@ describe('UserService - Core Functionality', () => {
   beforeEach(() => {
     userService = new UserService();
     jest.clearAllMocks();
+
+    // Reset JWT mocks to default values
+    const jwt = require('jsonwebtoken');
+    jwt.sign.mockReturnValue('mock.jwt.token');
+    jwt.verify.mockReturnValue({ userId: 'user-123', role: 'patient' });
   });
 
   describe('Service instantiation', () => {
@@ -292,6 +297,9 @@ describe('UserService - Core Functionality', () => {
         isActive: true,
       };
 
+      // Reset the JWT mock to return the correct payload
+      const jwt = require('jsonwebtoken');
+      jwt.verify.mockReturnValue({ userId: 'user-123', role: 'patient' });
       User.findByPk.mockResolvedValue(mockUser);
 
       const result = await userService.verifyToken('valid.jwt.token');
@@ -320,11 +328,13 @@ describe('UserService - Core Functionality', () => {
 
   describe('User status management', () => {
     it('should activate user', async () => {
-      const updatedUser = { id: 'user-123', isActive: true };
       const mockUser = {
         id: 'user-123',
         isActive: false,
-        update: jest.fn().mockResolvedValue(updatedUser),
+        update: jest.fn().mockImplementation((data) => {
+          Object.assign(mockUser, data);
+          return Promise.resolve(mockUser);
+        }),
       };
 
       User.findByPk.mockResolvedValue(mockUser);
@@ -336,11 +346,13 @@ describe('UserService - Core Functionality', () => {
     });
 
     it('should deactivate user', async () => {
-      const updatedUser = { id: 'user-123', isActive: false };
       const mockUser = {
         id: 'user-123',
         isActive: true,
-        update: jest.fn().mockResolvedValue(updatedUser),
+        update: jest.fn().mockImplementation((data) => {
+          Object.assign(mockUser, data);
+          return Promise.resolve(mockUser);
+        }),
       };
 
       User.findByPk.mockResolvedValue(mockUser);

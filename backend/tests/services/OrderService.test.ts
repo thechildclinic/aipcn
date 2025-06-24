@@ -15,8 +15,8 @@ import {
 jest.mock('../../src/models/Order');
 jest.mock('../../src/models/Patient');
 jest.mock('../../src/models/Provider');
-const MockOrder = Order as jest.MockedClass<typeof Order>;
-const MockPatient = Patient as jest.MockedClass<typeof Patient>;
+const MockOrder = Order as any;
+const MockPatient = Patient as any;
 const MockProvider = Provider as jest.MockedClass<typeof Provider>;
 
 describe('OrderService', () => {
@@ -68,7 +68,7 @@ describe('OrderService', () => {
       expect(MockOrder.create).toHaveBeenCalledWith(
         expect.objectContaining({
           ...validOrderData,
-          status: OrderStatus.PENDING,
+          status: OrderStatus.PENDING_BROADCAST,
           orderDate: expect.any(Date),
         })
       );
@@ -151,7 +151,7 @@ describe('OrderService', () => {
       completedOrder.update = jest.fn();
 
       const { error } = await expectAsync(
-        orderService.updateStatus('order-123', { status: OrderStatus.PENDING })
+        orderService.updateStatus('order-123', { status: OrderStatus.PENDING_BROADCAST })
       );
       
       expectValidationError(error, 'status');
@@ -270,7 +270,7 @@ describe('OrderService', () => {
     const searchCriteria = {
       patientId: 'patient-123',
       type: OrderType.PHARMACY,
-      status: OrderStatus.PENDING,
+      status: OrderStatus.PENDING_BROADCAST,
       dateFrom: new Date('2023-01-01'),
       dateTo: new Date('2023-12-31'),
     };
@@ -310,11 +310,11 @@ describe('OrderService', () => {
       const orders = [mockOrder];
       MockOrder.findAll.mockResolvedValue(orders);
 
-      const result = await orderService.getOrdersByStatus(OrderStatus.PENDING);
+      const result = await orderService.getOrdersByStatus(OrderStatus.PENDING_BROADCAST);
 
       expect(MockOrder.findAll).toHaveBeenCalledWith(
         expect.objectContaining({
-          where: { status: OrderStatus.PENDING },
+          where: { status: OrderStatus.PENDING_BROADCAST },
         })
       );
       expect(result).toEqual(orders);
@@ -333,7 +333,7 @@ describe('OrderService', () => {
           where: expect.objectContaining({
             status: expect.objectContaining({
               [expect.any(Symbol)]: expect.arrayContaining([
-                OrderStatus.PENDING,
+                OrderStatus.PENDING_BROADCAST,
                 OrderStatus.AWAITING_BIDS,
                 OrderStatus.ASSIGNED,
                 OrderStatus.IN_PROGRESS,

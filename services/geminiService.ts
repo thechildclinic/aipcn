@@ -3,7 +3,7 @@ import { ChatMessage, ProvisionalDiagnosisResult, GeneratedQuestion, Medication,
 
 // SECURITY: All AI calls now go through backend API - no client-side API keys
 // Get API base URL from environment variables
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://aipcn.onrender.com';
 const API_TIMEOUT = parseInt(import.meta.env.VITE_API_TIMEOUT || '60000', 10);
 
 // API client configuration

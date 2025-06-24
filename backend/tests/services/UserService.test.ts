@@ -113,7 +113,7 @@ describe('UserService', () => {
     };
 
     it('should login successfully with valid credentials', async () => {
-      MockUser.findOne.mockResolvedValue(mockUser);
+      User.findOne.mockResolvedValue(mockUser);
 
       const result = await userService.login(loginCredentials);
 
@@ -129,48 +129,48 @@ describe('UserService', () => {
     });
 
     it('should throw validation error for non-existent user', async () => {
-      MockUser.findOne.mockResolvedValue(null);
+      User.findOne.mockResolvedValue(null);
 
       const { error } = await expectAsync(userService.login(loginCredentials));
-      
+
       expectValidationError(error, 'email');
     });
 
     it('should throw validation error for inactive user', async () => {
       const inactiveUser = { ...mockUser, isActive: false };
-      MockUser.findOne.mockResolvedValue(inactiveUser);
+      User.findOne.mockResolvedValue(inactiveUser);
 
       const { error } = await expectAsync(userService.login(loginCredentials));
-      
+
       expectValidationError(error, 'account');
     });
 
     it('should throw validation error for incorrect password', async () => {
-      MockUser.findOne.mockResolvedValue(mockUser);
+      User.findOne.mockResolvedValue(mockUser);
       const bcrypt = require('bcrypt');
       bcrypt.compare.mockResolvedValue(false);
 
       const { error } = await expectAsync(userService.login(loginCredentials));
-      
+
       expectValidationError(error, 'password');
     });
   });
 
   describe('findById', () => {
     it('should find user by id successfully', async () => {
-      MockUser.findByPk.mockResolvedValue(mockUser);
+      User.findByPk.mockResolvedValue(mockUser);
 
       const result = await userService.findById('user-123');
 
-      expect(MockUser.findByPk).toHaveBeenCalledWith('user-123', {});
+      expect(User.findByPk).toHaveBeenCalledWith('user-123', {});
       expect(result).toEqual(mockUser);
     });
 
     it('should throw not found error for non-existent user', async () => {
-      MockUser.findByPk.mockResolvedValue(null);
+      User.findByPk.mockResolvedValue(null);
 
       const { error } = await expectAsync(userService.findById('non-existent'));
-      
+
       expectNotFoundError(error, 'User');
     });
   });
@@ -183,7 +183,7 @@ describe('UserService', () => {
 
     it('should update user successfully', async () => {
       const updatedUser = { ...mockUser, ...updateData };
-      MockUser.findByPk.mockResolvedValue(mockUser);
+      User.findByPk.mockResolvedValue(mockUser);
       mockUser.update = jest.fn().mockResolvedValue(updatedUser);
 
       const result = await userService.update('user-123', updateData);
@@ -193,10 +193,10 @@ describe('UserService', () => {
     });
 
     it('should throw not found error for non-existent user', async () => {
-      MockUser.findByPk.mockResolvedValue(null);
+      User.findByPk.mockResolvedValue(null);
 
       const { error } = await expectAsync(userService.update('non-existent', updateData));
-      
+
       expectNotFoundError(error, 'User');
     });
   });
@@ -208,7 +208,7 @@ describe('UserService', () => {
     };
 
     it('should change password successfully', async () => {
-      MockUser.findByPk.mockResolvedValue(mockUser);
+      User.findByPk.mockResolvedValue(mockUser);
       mockUser.update = jest.fn().mockResolvedValue(mockUser);
 
       await userService.changePassword('user-123', passwordData);
@@ -220,21 +220,21 @@ describe('UserService', () => {
     });
 
     it('should throw validation error for incorrect current password', async () => {
-      MockUser.findByPk.mockResolvedValue(mockUser);
+      User.findByPk.mockResolvedValue(mockUser);
       const bcrypt = require('bcrypt');
       bcrypt.compare.mockResolvedValue(false);
 
       const { error } = await expectAsync(
         userService.changePassword('user-123', passwordData)
       );
-      
+
       expectValidationError(error, 'currentPassword');
     });
   });
 
   describe('verifyToken', () => {
     it('should verify token successfully', async () => {
-      MockUser.findByPk.mockResolvedValue(mockUser);
+      User.findByPk.mockResolvedValue(mockUser);
 
       const result = await userService.verifyToken('valid.jwt.token');
 
@@ -252,7 +252,7 @@ describe('UserService', () => {
       });
 
       const { error } = await expectAsync(userService.verifyToken('invalid.token'));
-      
+
       expectValidationError(error, 'token');
     });
   });
@@ -260,11 +260,11 @@ describe('UserService', () => {
   describe('searchUsers', () => {
     it('should search users successfully', async () => {
       const users = [mockUser];
-      MockUser.findAll.mockResolvedValue(users);
+      User.findAll.mockResolvedValue(users);
 
       const result = await userService.searchUsers('test');
 
-      expect(MockUser.findAll).toHaveBeenCalledWith(
+      expect(User.findAll).toHaveBeenCalledWith(
         expect.objectContaining({
           where: expect.objectContaining({
             [expect.any(Symbol)]: expect.any(Array)
@@ -277,7 +277,7 @@ describe('UserService', () => {
 
   describe('getUserStatistics', () => {
     it('should get user statistics successfully', async () => {
-      MockUser.count
+      User.count
         .mockResolvedValueOnce(100) // total users
         .mockResolvedValueOnce(95)  // active users
         .mockResolvedValueOnce(20)  // patients
@@ -304,7 +304,7 @@ describe('UserService', () => {
 
   describe('setUserStatus', () => {
     it('should activate user successfully', async () => {
-      MockUser.findByPk.mockResolvedValue(mockUser);
+      User.findByPk.mockResolvedValue(mockUser);
       mockUser.update = jest.fn().mockResolvedValue({ ...mockUser, isActive: true });
 
       const result = await userService.setUserStatus('user-123', true);
@@ -314,7 +314,7 @@ describe('UserService', () => {
     });
 
     it('should deactivate user successfully', async () => {
-      MockUser.findByPk.mockResolvedValue(mockUser);
+      User.findByPk.mockResolvedValue(mockUser);
       mockUser.update = jest.fn().mockResolvedValue({ ...mockUser, isActive: false });
 
       const result = await userService.setUserStatus('user-123', false);

@@ -9,7 +9,7 @@ export { BidService } from './BidService';
 export { AlgorithmConfigurationService } from './AlgorithmConfigurationService';
 
 // Export business logic services
-export { OrderOrchestrationService } from './OrderOrchestrationService';
+export { OrderOrchestrationService } from './orderOrchestrationService';
 export { ProviderMatchingService } from './ProviderMatchingService';
 export { TreatmentPlanService } from './TreatmentPlanService';
 
@@ -65,7 +65,7 @@ import { BidService } from './BidService';
 import { AlgorithmConfigurationService } from './AlgorithmConfigurationService';
 
 // Import business logic services
-import { OrderOrchestrationService } from './OrderOrchestrationService';
+import { OrderOrchestrationService } from './orderOrchestrationService';
 import { ProviderMatchingService } from './ProviderMatchingService';
 import { TreatmentPlanService } from './TreatmentPlanService';
 

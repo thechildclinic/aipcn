@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+
+# AIPC Healthcare Platform
+# AI-Powered Care Demo Site
+Sitemap: https://aipc-healthcare-platform.onrender.com/sitemap.xml

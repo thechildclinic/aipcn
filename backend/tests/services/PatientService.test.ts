@@ -12,8 +12,8 @@ import {
 // Mock the models
 jest.mock('../../src/models/Patient');
 jest.mock('../../src/models/User');
-const MockPatient = Patient as jest.MockedClass<typeof Patient>;
-const MockUser = User as jest.MockedClass<typeof User>;
+const MockPatient = Patient as any;
+const MockUser = User as any;
 
 describe('PatientService', () => {
   let patientService: PatientService;

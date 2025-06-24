@@ -1,4 +1,5 @@
 services:
+  # Backend API Service
   - type: web
     name: aipc-backend
     env: node
@@ -11,3 +12,21 @@ services:
         value: production
       - key: PORT
         value: 10000
+
+  # Frontend React App Service
+  - type: web
+    name: aipc-frontend
+    env: node
+    plan: free
+    rootDir: AIPC
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: VITE_API_BASE_URL
+        value: https://aipcn.onrender.com
+      - key: VITE_APP_NAME
+        value: AI-Powered Care
+      - key: VITE_DEMO_MODE
+        value: true

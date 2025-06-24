@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Icons } from '../constants';
 import { User, UserRole, testUsers } from '../types/roleTypes';
+import { apiService } from '../services/apiService';
 
 interface UnifiedLoginInterfaceProps {
   onLogin: (user: User) => void;
@@ -59,12 +60,25 @@ const UnifiedLoginInterface: React.FC<UnifiedLoginInterfaceProps> = ({ onLogin }
   ];
 
   const handleQuickLogin = (role: UserRole) => {
-    const testUser = testUsers.find(u => u.role === role);
-    if (testUser) {
-      setEmail(testUser.email);
-      setPassword('demo123');
-      setError('');
+    const demoCredentials = apiService.getDemoCredentials();
+
+    // Map roles to demo credentials
+    if (role === 'patient') {
+      setEmail(demoCredentials.patient.email);
+      setPassword(demoCredentials.patient.password);
+    } else if (role === 'doctor') {
+      setEmail(demoCredentials.doctor.email);
+      setPassword(demoCredentials.doctor.password);
+    } else if (role === 'admin' || role === 'marketplace_manager') {
+      setEmail(demoCredentials.admin.email);
+      setPassword(demoCredentials.admin.password);
+    } else {
+      // For other roles, use patient credentials as fallback
+      setEmail(demoCredentials.patient.email);
+      setPassword(demoCredentials.patient.password);
     }
+
+    setError('');
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -73,17 +87,30 @@ const UnifiedLoginInterface: React.FC<UnifiedLoginInterfaceProps> = ({ onLogin }
     setError('');
 
     try {
-      // Simulate authentication
-      const foundUser = testUsers.find(u => u.email === email);
-      
-      if (foundUser && password === 'demo123') {
-        const userWithLogin = { ...foundUser, lastLogin: new Date() };
-        onLogin(userWithLogin);
+      // Use real API authentication
+      const response = await apiService.login({ email, password });
+
+      if (response.success && response.data?.user) {
+        // Convert API user to frontend User type
+        const user: User = {
+          id: response.data.user.id,
+          email: response.data.user.email,
+          firstName: response.data.user.firstName,
+          lastName: response.data.user.lastName,
+          role: response.data.user.role as UserRole,
+          isActive: response.data.user.isActive,
+          lastLogin: new Date(),
+          createdAt: new Date(response.data.user.createdAt),
+          updatedAt: new Date(response.data.user.updatedAt),
+        };
+
+        onLogin(user);
       } else {
-        setError('Invalid credentials. Use demo123 as password for test accounts.');
+        setError(response.message || 'Invalid credentials');
       }
-    } catch (err) {
-      setError('Login failed. Please try again.');
+    } catch (err: any) {
+      console.error('Login error:', err);
+      setError(err.message || 'Login failed. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -251,10 +278,15 @@ const UnifiedLoginInterface: React.FC<UnifiedLoginInterfaceProps> = ({ onLogin }
               </div>
 
               <div className="mt-6 pt-6 border-t border-gray-200">
-                <p className="text-xs text-gray-500 text-center">
-                  Demo system for evaluation purposes.<br />
-                  All data is simulated for testing.
+                <p className="text-xs text-gray-500 text-center mb-2">
+                  <strong>Live Demo System</strong><br />
+                  Connected to real backend API
                 </p>
+                <div className="text-xs text-gray-600 space-y-1">
+                  <div><strong>Patient:</strong> patient1@example.com / Patient123!</div>
+                  <div><strong>Doctor:</strong> dr.smith@aipc.com / Doctor123!</div>
+                  <div><strong>Admin:</strong> admin@aipc.com / Admin123!</div>
+                </div>
               </div>
             </div>
           </div>

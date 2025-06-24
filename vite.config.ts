@@ -4,11 +4,10 @@ import react from '@vitejs/plugin-react'
 export default defineConfig({
   plugins: [react()],
   define: {
-    // SECURITY: Remove API key exposure from frontend
-    // All AI calls should go through backend API
-    'process.env.NODE_ENV': JSON.stringify('development'),
-    'process.env.VITE_API_BASE_URL': JSON.stringify('http://localhost:3001'),
-    'process.env.VITE_APP_NAME': JSON.stringify('AIPC'),
+    // Environment variables for production
+    'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'development'),
+    'process.env.VITE_API_BASE_URL': JSON.stringify(process.env.VITE_API_BASE_URL || 'https://aipcn.onrender.com'),
+    'process.env.VITE_APP_NAME': JSON.stringify(process.env.VITE_APP_NAME || 'AIPC Healthcare Platform'),
     'process.env.VITE_APP_VERSION': JSON.stringify('1.0.0'),
   },
   server: {
@@ -16,7 +15,7 @@ export default defineConfig({
     proxy: {
       // Proxy API calls to backend during development
       '/api': {
-        target: 'http://localhost:3001',
+        target: process.env.VITE_API_BASE_URL || 'http://localhost:3001',
         changeOrigin: true,
         secure: false,
       }
@@ -24,6 +23,17 @@ export default defineConfig({
   },
   build: {
     outDir: 'dist',
-    sourcemap: true,
-  }
+    sourcemap: false, // Disable sourcemaps in production for security
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: ['react', 'react-dom'],
+          utils: ['@google/genai']
+        }
+      }
+    },
+    chunkSizeWarningLimit: 1000
+  },
+  publicDir: 'public',
+  base: '/'
 })

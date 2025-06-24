@@ -1,0 +1,23 @@
+# Render.com deployment configuration for AIPC Frontend
+# This deploys the complete React healthcare platform
+services:
+  - type: web
+    name: aipc-healthcare-platform
+    env: node
+    region: oregon
+    plan: free
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: VITE_API_BASE_URL
+        value: https://aipcn.onrender.com
+      - key: VITE_APP_NAME
+        value: AIPC Healthcare Platform
+      - key: VITE_DEMO_MODE
+        value: true
+      - key: VITE_ENABLE_MOCK_DATA
+        value: false
+    # Health check configuration
+    healthCheckPath: /health
