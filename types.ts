@@ -1,3 +1,6 @@
+// Re-export UserRole from roleTypes
+export type { UserRole, User } from './types/roleTypes';
+
 export enum AppStage {
   WELCOME,
   PATIENT_PROFILE, // New stage for collecting patient profile
