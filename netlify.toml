@@ -1,7 +1,6 @@
 [build]
-  base = "AIPC"
-  publish = "dist"
-  command = "npm ci && npm run build"
+  publish = "AIPC/dist"
+  command = "cd AIPC && npm ci && npm run build"
 
 [build.environment]
   NODE_VERSION = "18"
