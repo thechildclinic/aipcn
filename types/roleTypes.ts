@@ -2,6 +2,16 @@
 
 export type UserRole = 'doctor' | 'pharmacy_manager' | 'lab_manager' | 'clinic_coordinator' | 'patient' | 'marketplace_manager';
 
+// Runtime constants for UserRole values
+export const USER_ROLES = {
+  DOCTOR: 'doctor' as const,
+  PHARMACY_MANAGER: 'pharmacy_manager' as const,
+  LAB_MANAGER: 'lab_manager' as const,
+  CLINIC_COORDINATOR: 'clinic_coordinator' as const,
+  PATIENT: 'patient' as const,
+  MARKETPLACE_MANAGER: 'marketplace_manager' as const,
+} as const;
+
 export interface User {
   id: string;
   email: string;
@@ -509,8 +519,8 @@ export const testUsers: User[] = [
   }
 ];
 
+// UserRole is a type alias, not a runtime value, so we don't export it in default
 export default {
-  UserRole,
   User,
   PrescriptionOrder,
   LabTestOrder,

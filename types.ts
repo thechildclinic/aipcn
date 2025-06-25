@@ -1,5 +1,6 @@
 // Re-export UserRole from roleTypes
 export type { UserRole, User } from './types/roleTypes';
+export { testUsers } from './types/roleTypes';
 
 export enum AppStage {
   WELCOME,
