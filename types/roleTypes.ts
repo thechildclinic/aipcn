@@ -519,12 +519,7 @@ export const testUsers: User[] = [
   }
 ];
 
-// UserRole is a type alias, not a runtime value, so we don't export it in default
+// Only export runtime values in default export, not TypeScript interfaces/types
 export default {
-  User,
-  PrescriptionOrder,
-  LabTestOrder,
-  PatientAppointment,
-  PatientJourney,
   testUsers
 };
