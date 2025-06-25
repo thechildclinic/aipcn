@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AIPC Test Deployment</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-align: center;
+        }
+        .container {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 40px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+        }
+        h1 { color: #fff; margin-bottom: 30px; }
+        .status { font-size: 18px; margin: 20px 0; }
+        .success { color: #4CAF50; }
+        .info { color: #2196F3; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎉 AIPC Deployment Test</h1>
+        <div class="status success">✅ Netlify Deployment Successful!</div>
+        <div class="status info">🚀 AIPC Healthcare Platform</div>
+        <div class="status">📅 Deployed: <span id="timestamp"></span></div>
+        <div class="status">🔗 Backend: https://aipcn.onrender.com</div>
+        <div class="status">👨‍⚕️ Ready for Full Application Deployment</div>
+    </div>
+    
+    <script>
+        document.getElementById('timestamp').textContent = new Date().toLocaleString();
+    </script>
+</body>
+</html>

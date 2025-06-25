@@ -1,6 +1,6 @@
 [build]
-  publish = "dist"
-  command = "npm ci && npm run build"
+  publish = "."
+  command = "cp test-deploy.html index.html"
 
 [build.environment]
   NODE_VERSION = "18"
