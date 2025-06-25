@@ -1,0 +1,5 @@
+# Netlify redirects for SPA routing
+/*    /index.html   200
+
+# API proxy redirects
+/api/*  https://aipcn.onrender.com/api/:splat  200
