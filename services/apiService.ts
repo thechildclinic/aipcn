@@ -198,6 +198,9 @@ class ApiService {
 export const apiService = new ApiService();
 export default apiService;
 
+// Export the class for static method access
+export { ApiService };
+
 // Export types for use in components
 export type {
   ApiResponse,

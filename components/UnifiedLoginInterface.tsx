@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
 import { Icons } from '../constants';
 import { User, UserRole, testUsers } from '../types/roleTypes';
-import { apiService } from '../services/apiService';
-import ApiService from '../services/apiService';
+import { apiService, ApiService } from '../services/apiService';
 
 interface UnifiedLoginInterfaceProps {
   onLogin: (user: User) => void;
