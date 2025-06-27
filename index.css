@@ -208,12 +208,31 @@
   /* Code styling */
   code { font-family: ui-monospace, SFMono-Regular, "SF Mono", Consolas, "Liberation Mono", Menlo, monospace; }
 
-  /* Force proper icon sizing */
-  svg { max-width: 100%; max-height: 100%; }
-  .h-12 { height: 3rem !important; }
-  .w-12 { width: 3rem !important; }
-  .h-8 { height: 2rem !important; }
-  .w-8 { width: 2rem !important; }
+  /* AGGRESSIVE icon sizing constraints */
+  svg {
+    max-width: 100% !important;
+    max-height: 100% !important;
+    width: auto !important;
+    height: auto !important;
+  }
+
+  /* Force specific icon sizes */
+  .h-4 { height: 1rem !important; max-height: 1rem !important; }
+  .w-4 { width: 1rem !important; max-width: 1rem !important; }
+  .h-6 { height: 1.5rem !important; max-height: 1.5rem !important; }
+  .w-6 { width: 1.5rem !important; max-width: 1.5rem !important; }
+  .h-8 { height: 2rem !important; max-height: 2rem !important; }
+  .w-8 { width: 2rem !important; max-width: 2rem !important; }
+  .h-12 { height: 3rem !important; max-height: 3rem !important; }
+  .w-12 { width: 3rem !important; max-width: 3rem !important; }
+
+  /* Prevent any SVG from growing beyond container */
+  button svg, div svg, span svg {
+    max-width: 2rem !important;
+    max-height: 2rem !important;
+    width: auto !important;
+    height: auto !important;
+  }
 
   /* Ensure buttons are clickable */
   button {
@@ -221,12 +240,18 @@
     pointer-events: auto !important;
     position: relative !important;
     z-index: 1 !important;
+    overflow: hidden !important;
   }
 
   /* Fix any overlay issues */
   .role-card {
     position: relative !important;
     z-index: 10 !important;
+  }
+
+  /* Emergency constraint for any rogue elements */
+  * {
+    max-width: 100vw !important;
   }
 }
 

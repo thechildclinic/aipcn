@@ -255,14 +255,11 @@ const UnifiedLoginInterface: React.FC<UnifiedLoginInterfaceProps> = ({ onLogin }
                 >
                   {isLoading ? (
                     <>
-                      <Icons.Loader className="h-4 w-4 mr-2 animate-spin" />
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
                       Signing In...
                     </>
                   ) : (
-                    <>
-                      <Icons.LogIn className="h-4 w-4 mr-2" />
-                      Sign In
-                    </>
+                    "Sign In"
                   )}
                 </button>
               </form>
