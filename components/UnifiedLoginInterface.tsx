@@ -3,6 +3,7 @@ import { Icons } from '../constants';
 import { User, UserRole, testUsers } from '../types/roleTypes';
 import { ApiService } from '../services/apiService';
 import { useAuth } from './RoleBasedAuth';
+import MedicalDisclaimer from './MedicalDisclaimer';
 
 interface UnifiedLoginInterfaceProps {
   onLogin: (user: User) => void;
@@ -119,6 +120,9 @@ const UnifiedLoginInterface: React.FC<UnifiedLoginInterfaceProps> = ({ onLogin }
             Connecting patients, providers, and healthcare professionals in one integrated platform
           </p>
         </div>
+
+        {/* Medical Disclaimer Banner */}
+        <MedicalDisclaimer variant="banner" onAccept={() => {}} showAcceptButton={false} />
 
         <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
           <div className="lg:flex">
