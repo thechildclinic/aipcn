@@ -62,16 +62,20 @@ const UnifiedLoginInterface: React.FC<UnifiedLoginInterfaceProps> = ({ onLogin }
   ];
 
   const handleQuickLogin = (role: UserRole) => {
+    console.log('Role button clicked:', role); // Debug log
+
     // Find the test user for this role
     const testUser = testUsers.find(user => user.role === role);
 
     if (testUser) {
       setEmail(testUser.email);
       setPassword('demo123'); // All demo accounts use this password
+      console.log('Credentials set:', testUser.email); // Debug log
     } else {
       // Fallback to first available user
       setEmail(testUsers[0].email);
       setPassword('demo123');
+      console.log('Using fallback credentials:', testUsers[0].email); // Debug log
     }
 
     setError('');
@@ -125,8 +129,14 @@ const UnifiedLoginInterface: React.FC<UnifiedLoginInterfaceProps> = ({ onLogin }
                   Choose Your Role
                 </h2>
                 <button
-                  onClick={() => setShowQuickLogin(!showQuickLogin)}
-                  className="text-sm text-blue-600 hover:text-blue-700 underline"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    console.log('Toggle demo accounts clicked, current state:', showQuickLogin);
+                    setShowQuickLogin(!showQuickLogin);
+                  }}
+                  className="text-sm text-blue-600 hover:text-blue-700 underline cursor-pointer"
+                  type="button"
                 >
                   {showQuickLogin ? 'Hide' : 'Show'} Demo Accounts
                 </button>
@@ -136,8 +146,14 @@ const UnifiedLoginInterface: React.FC<UnifiedLoginInterfaceProps> = ({ onLogin }
                 {userTypes.map((userType) => (
                   <button
                     key={userType.role}
-                    onClick={() => handleQuickLogin(userType.role as UserRole)}
-                    className={`p-4 rounded-lg border-2 transition-all text-left hover:shadow-md ${userType.color}`}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      console.log('Button clicked for role:', userType.role);
+                      handleQuickLogin(userType.role as UserRole);
+                    }}
+                    className={`role-card p-4 rounded-lg border-2 transition-all text-left hover:shadow-md cursor-pointer ${userType.color}`}
+                    type="button"
                   >
                     <div className="flex items-center mb-2">
                       <span className="text-2xl mr-3">{userType.icon}</span>

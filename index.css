@@ -207,6 +207,27 @@
 
   /* Code styling */
   code { font-family: ui-monospace, SFMono-Regular, "SF Mono", Consolas, "Liberation Mono", Menlo, monospace; }
+
+  /* Force proper icon sizing */
+  svg { max-width: 100%; max-height: 100%; }
+  .h-12 { height: 3rem !important; }
+  .w-12 { width: 3rem !important; }
+  .h-8 { height: 2rem !important; }
+  .w-8 { width: 2rem !important; }
+
+  /* Ensure buttons are clickable */
+  button {
+    cursor: pointer !important;
+    pointer-events: auto !important;
+    position: relative !important;
+    z-index: 1 !important;
+  }
+
+  /* Fix any overlay issues */
+  .role-card {
+    position: relative !important;
+    z-index: 10 !important;
+  }
 }
 
 /* Custom scrollbar for chat/long content */
