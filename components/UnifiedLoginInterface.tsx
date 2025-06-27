@@ -1,13 +1,15 @@
 import React, { useState } from 'react';
 import { Icons } from '../constants';
 import { User, UserRole, testUsers } from '../types/roleTypes';
-import { apiService, ApiService } from '../services/apiService';
+import { ApiService } from '../services/apiService';
+import { useAuth } from './RoleBasedAuth';
 
 interface UnifiedLoginInterfaceProps {
   onLogin: (user: User) => void;
 }
 
 const UnifiedLoginInterface: React.FC<UnifiedLoginInterfaceProps> = ({ onLogin }) => {
+  const { login } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -60,22 +62,16 @@ const UnifiedLoginInterface: React.FC<UnifiedLoginInterfaceProps> = ({ onLogin }
   ];
 
   const handleQuickLogin = (role: UserRole) => {
-    const demoCredentials = ApiService.getDemoCredentials();
+    // Find the test user for this role
+    const testUser = testUsers.find(user => user.role === role);
 
-    // Map roles to demo credentials
-    if (role === 'patient') {
-      setEmail(demoCredentials.patient.email);
-      setPassword(demoCredentials.patient.password);
-    } else if (role === 'doctor') {
-      setEmail(demoCredentials.doctor.email);
-      setPassword(demoCredentials.doctor.password);
-    } else if (role === 'admin' || role === 'marketplace_manager') {
-      setEmail(demoCredentials.admin.email);
-      setPassword(demoCredentials.admin.password);
+    if (testUser) {
+      setEmail(testUser.email);
+      setPassword('demo123'); // All demo accounts use this password
     } else {
-      // For other roles, use patient credentials as fallback
-      setEmail(demoCredentials.patient.email);
-      setPassword(demoCredentials.patient.password);
+      // Fallback to first available user
+      setEmail(testUsers[0].email);
+      setPassword('demo123');
     }
 
     setError('');
@@ -87,27 +83,14 @@ const UnifiedLoginInterface: React.FC<UnifiedLoginInterfaceProps> = ({ onLogin }
     setError('');
 
     try {
-      // Use real API authentication
-      const response = await apiService.login({ email, password });
+      // Use the auth context login method
+      const success = await login(email, password);
 
-      if (response.success && response.data?.user) {
-        // Convert API user to frontend User type
-        const user: User = {
-          id: response.data.user.id,
-          email: response.data.user.email,
-          firstName: response.data.user.firstName,
-          lastName: response.data.user.lastName,
-          role: response.data.user.role as UserRole,
-          isActive: response.data.user.isActive,
-          lastLogin: new Date(),
-          createdAt: new Date(response.data.user.createdAt),
-          updatedAt: new Date(response.data.user.updatedAt),
-        };
-
-        onLogin(user);
-      } else {
-        setError(response.message || 'Invalid credentials');
+      if (!success) {
+        setError('Invalid credentials. Please check your email and password.');
       }
+      // If successful, the auth context will handle the user state update
+      // and the parent component will automatically re-render
     } catch (err: any) {
       console.error('Login error:', err);
       setError(err.message || 'Login failed. Please try again.');
