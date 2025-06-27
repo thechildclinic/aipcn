@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Icons } from '../constants';
 import { User, UserRole, testUsers } from '../types/roleTypes';
 import { apiService } from '../services/apiService';
+import ApiService from '../services/apiService';
 
 interface UnifiedLoginInterfaceProps {
   onLogin: (user: User) => void;
@@ -60,7 +61,7 @@ const UnifiedLoginInterface: React.FC<UnifiedLoginInterfaceProps> = ({ onLogin }
   ];
 
   const handleQuickLogin = (role: UserRole) => {
-    const demoCredentials = apiService.getDemoCredentials();
+    const demoCredentials = ApiService.getDemoCredentials();
 
     // Map roles to demo credentials
     if (role === 'patient') {
