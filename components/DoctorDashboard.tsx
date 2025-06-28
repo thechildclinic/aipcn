@@ -31,6 +31,17 @@ const DoctorDashboard: React.FC<DoctorDashboardProps> = ({ user, onLogout }) => 
   const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(false);
 
+  // SOAP Notes state
+  const [activeSOAPSection, setActiveSOAPSection] = useState<'S' | 'O' | 'A' | 'P'>('S');
+  const [soapNotes, setSOAPNotes] = useState({
+    subjective: '',
+    objective: '',
+    assessment: '',
+    plan: ''
+  });
+  const [showSOAPEditor, setShowSOAPEditor] = useState(false);
+  const [patientHistory, setPatientHistory] = useState<string[]>([]);
+
   // Sample patient cases for demonstration
   const [patientCases] = useState<PatientCase[]>([
     {
@@ -211,13 +222,116 @@ Notes generated at: ${new Date().toLocaleString()}`;
   };
 
   const applySuggestion = (suggestion: DoctorNoteSuggestion) => {
-    setDoctorNotes(prev => {
-      if (suggestion.type === 'autocomplete') {
-        return prev + '\n\n' + suggestion.suggestion;
-      } else {
-        return prev + '\n\nADDITIONAL CONSIDERATIONS:\n- ' + suggestion.suggestion;
-      }
+    if (showSOAPEditor) {
+      // Apply to active SOAP section
+      setSOAPNotes(prev => {
+        const sectionKey = {
+          'S': 'subjective',
+          'O': 'objective',
+          'A': 'assessment',
+          'P': 'plan'
+        }[activeSOAPSection] as keyof typeof prev;
+
+        return {
+          ...prev,
+          [sectionKey]: prev[sectionKey] + (prev[sectionKey] ? '\n\n' : '') + suggestion.suggestion
+        };
+      });
+    } else {
+      // Apply to regular notes
+      setDoctorNotes(prev => {
+        if (suggestion.type === 'autocomplete') {
+          return prev + '\n\n' + suggestion.suggestion;
+        } else {
+          return prev + '\n\nADDITIONAL CONSIDERATIONS:\n- ' + suggestion.suggestion;
+        }
+      });
+    }
+  };
+
+  const generateSOAPSuggestions = (section: 'S' | 'O' | 'A' | 'P', patient: PatientCase): DoctorNoteSuggestion[] => {
+    const suggestions: DoctorNoteSuggestion[] = [];
+
+    switch (section) {
+      case 'S': // Subjective
+        suggestions.push(
+          { suggestion: `Chief complaint: ${patient.symptoms}`, type: 'autocomplete' },
+          { suggestion: 'History of present illness: Onset, location, duration, character, aggravating/alleviating factors, radiation, timing, severity', type: 'meta-finding' },
+          { suggestion: 'Review of systems: Constitutional, cardiovascular, respiratory, gastrointestinal, genitourinary, musculoskeletal, neurological', type: 'meta-finding' },
+          { suggestion: 'Past medical history, medications, allergies, social history, family history', type: 'autocomplete' }
+        );
+        break;
+
+      case 'O': // Objective
+        suggestions.push(
+          { suggestion: 'Vital signs: BP, HR, RR, Temp, O2 sat, pain scale', type: 'autocomplete' },
+          { suggestion: 'Physical examination: General appearance, HEENT, cardiovascular, pulmonary, abdominal, extremities, neurological', type: 'meta-finding' },
+          { suggestion: 'Laboratory results and diagnostic studies', type: 'autocomplete' },
+          { suggestion: 'Mental status examination if indicated', type: 'meta-finding' }
+        );
+        break;
+
+      case 'A': // Assessment
+        if (patient.symptoms.toLowerCase().includes('chest pain')) {
+          suggestions.push(
+            { suggestion: 'Chest pain - consider cardiac, pulmonary, GI, musculoskeletal etiologies', type: 'autocomplete' },
+            { suggestion: 'Rule out acute coronary syndrome, pulmonary embolism, aortic dissection', type: 'meta-finding' }
+          );
+        }
+        suggestions.push(
+          { suggestion: 'Primary diagnosis based on clinical presentation', type: 'autocomplete' },
+          { suggestion: 'Differential diagnoses to consider', type: 'meta-finding' },
+          { suggestion: 'Clinical reasoning and risk stratification', type: 'autocomplete' }
+        );
+        break;
+
+      case 'P': // Plan
+        suggestions.push(
+          { suggestion: 'Diagnostic studies: Labs, imaging, procedures as indicated', type: 'autocomplete' },
+          { suggestion: 'Therapeutic interventions: Medications, procedures, referrals', type: 'autocomplete' },
+          { suggestion: 'Patient education and counseling', type: 'meta-finding' },
+          { suggestion: 'Follow-up instructions and return precautions', type: 'meta-finding' },
+          { suggestion: 'Disposition: Discharge home, admit, transfer, etc.', type: 'autocomplete' }
+        );
+        break;
+    }
+
+    return suggestions.slice(0, 4);
+  };
+
+  const initializeSOAPNotes = (patient: PatientCase) => {
+    setSOAPNotes({
+      subjective: `Chief Complaint: ${patient.symptoms}\n\nHistory of Present Illness:\n[Document onset, duration, quality, severity, associated symptoms]\n\nReview of Systems:\n[Systematic review by organ system]\n\nPast Medical History:\n[Relevant medical conditions]\n\nMedications:\n[Current medications and dosages]\n\nAllergies:\n[Drug and environmental allergies]\n\nSocial History:\n[Smoking, alcohol, drugs, occupation]\n\nFamily History:\n[Relevant family medical history]`,
+
+      objective: `Vital Signs:\n- Blood Pressure: ___\n- Heart Rate: ___\n- Respiratory Rate: ___\n- Temperature: ___\n- Oxygen Saturation: ___\n- Pain Scale: ___/10\n\nPhysical Examination:\n- General: [Appearance, distress level]\n- HEENT: [Head, eyes, ears, nose, throat]\n- Cardiovascular: [Heart sounds, murmurs, peripheral pulses]\n- Pulmonary: [Breath sounds, respiratory effort]\n- Abdominal: [Inspection, palpation, bowel sounds]\n- Extremities: [Edema, pulses, range of motion]\n- Neurological: [Mental status, cranial nerves, motor, sensory]\n\nDiagnostic Studies:\n[Lab results, imaging findings, other studies]`,
+
+      assessment: `Primary Diagnosis:\n[Most likely diagnosis based on clinical presentation]\n\nDifferential Diagnoses:\n1. [Alternative diagnosis 1]\n2. [Alternative diagnosis 2]\n3. [Alternative diagnosis 3]\n\nClinical Reasoning:\n[Rationale for primary diagnosis and rule-outs]\n\nRisk Stratification:\n[Assessment of severity and prognosis]`,
+
+      plan: `Diagnostic Plan:\n- [Additional tests or studies needed]\n- [Consultations required]\n\nTherapeutic Plan:\n- Medications: [Drug, dose, frequency, duration]\n- Procedures: [Any interventions needed]\n- Non-pharmacologic: [Lifestyle modifications, therapy]\n\nMonitoring:\n- [Parameters to follow]\n- [Frequency of monitoring]\n\nPatient Education:\n- [Key teaching points]\n- [Warning signs to watch for]\n\nFollow-up:\n- [When to return]\n- [Specific instructions]\n- [Referrals needed]\n\nDisposition:\n- [Discharge home/admit/transfer]\n- [Level of care needed]`
     });
+
+    setShowSOAPEditor(true);
+    setActiveSOAPSection('S');
+    loadSOAPSuggestions('S', patient);
+  };
+
+  const loadSOAPSuggestions = (section: 'S' | 'O' | 'A' | 'P', patient: PatientCase) => {
+    const suggestions = generateSOAPSuggestions(section, patient);
+    setNoteSuggestions(suggestions);
+    setShowSuggestions(true);
+  };
+
+  const generatePatientHistory = (patient: PatientCase) => {
+    // Simulate patient history
+    const history = [
+      `Previous visit (3 months ago): Annual physical examination - Normal findings`,
+      `Previous visit (6 months ago): Upper respiratory infection - Resolved with supportive care`,
+      `Previous visit (1 year ago): Hypertension follow-up - Well controlled on current medications`,
+      `Allergies: NKDA (No Known Drug Allergies)`,
+      `Current Medications: [To be reviewed with patient]`,
+      `Emergency Contacts: [To be updated]`
+    ];
+    setPatientHistory(history);
   };
 
   const handleGeneratePrescription = async () => {
@@ -486,7 +600,7 @@ Notes generated at: ${new Date().toLocaleString()}`;
                       </div>
                     </div>
 
-                    <div className="mt-6">
+                    <div className="mt-6 space-y-3">
                       <button
                         onClick={() => handleGenerateNotes(selectedPatient)}
                         disabled={isGeneratingNotes}
@@ -500,6 +614,17 @@ Notes generated at: ${new Date().toLocaleString()}`;
                             Generate AI Clinical Notes
                           </>
                         )}
+                      </button>
+
+                      <button
+                        onClick={() => {
+                          initializeSOAPNotes(selectedPatient);
+                          generatePatientHistory(selectedPatient);
+                        }}
+                        className="w-full bg-purple-600 hover:bg-purple-700 text-white py-2 px-4 rounded-md transition-colors flex items-center justify-center"
+                      >
+                        <Icons.FileText className="h-4 w-4 mr-2" />
+                        Start SOAP Documentation
                       </button>
                     </div>
                   </div>
@@ -589,6 +714,199 @@ Notes generated at: ${new Date().toLocaleString()}`;
                         )}
                       </div>
                     )}
+                  </div>
+                )}
+
+                {/* SOAP Notes Documentation System */}
+                {showSOAPEditor && selectedPatient && (
+                  <div className="space-y-6">
+                    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                      <div className="flex items-center justify-between mb-6">
+                        <h3 className="text-xl font-semibold text-gray-900">SOAP Documentation System</h3>
+                        <div className="flex space-x-2">
+                          <button
+                            onClick={() => setShowSOAPEditor(false)}
+                            className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-md text-sm transition-colors"
+                          >
+                            Close SOAP Editor
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Three-Panel Layout */}
+                      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        {/* Left Panel: Patient History */}
+                        <div className="lg:col-span-1">
+                          <div className="bg-gray-50 rounded-lg p-4 h-96 overflow-y-auto">
+                            <h4 className="font-semibold text-gray-900 mb-3 flex items-center">
+                              <Icons.Clock className="h-4 w-4 mr-2" />
+                              Patient History
+                            </h4>
+                            <div className="space-y-3">
+                              {patientHistory.map((item, index) => (
+                                <div key={index} className="text-sm text-gray-700 p-2 bg-white rounded border">
+                                  {item}
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Right Panel: Clinical Suggestions */}
+                        <div className="lg:col-span-1">
+                          <div className="bg-blue-50 rounded-lg p-4 h-96 overflow-y-auto">
+                            <h4 className="font-semibold text-gray-900 mb-3 flex items-center">
+                              <Icons.Lightbulb className="h-4 w-4 mr-2" />
+                              {activeSOAPSection} Section Suggestions
+                            </h4>
+                            <div className="space-y-2">
+                              {noteSuggestions.map((suggestion, index) => (
+                                <div
+                                  key={index}
+                                  className="bg-white p-3 rounded border hover:bg-gray-50 transition-colors"
+                                >
+                                  <div className="flex items-start justify-between">
+                                    <div className="flex-1">
+                                      <span className={`px-2 py-1 rounded-full text-xs font-medium mb-2 inline-block ${
+                                        suggestion.type === 'autocomplete'
+                                          ? 'bg-blue-100 text-blue-800'
+                                          : 'bg-purple-100 text-purple-800'
+                                      }`}>
+                                        {suggestion.type === 'autocomplete' ? 'Template' : 'Consider'}
+                                      </span>
+                                      <p className="text-sm text-gray-700">{suggestion.suggestion}</p>
+                                    </div>
+                                    <button
+                                      onClick={() => applySuggestion(suggestion)}
+                                      className="ml-2 bg-blue-600 hover:bg-blue-700 text-white px-2 py-1 rounded text-xs transition-colors"
+                                    >
+                                      Apply
+                                    </button>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Center Panel: SOAP Section Tabs */}
+                        <div className="lg:col-span-1">
+                          <div className="bg-green-50 rounded-lg p-4 h-96">
+                            <h4 className="font-semibold text-gray-900 mb-3">SOAP Navigation</h4>
+                            <div className="grid grid-cols-2 gap-2 mb-4">
+                              {[
+                                { key: 'S', label: 'Subjective', desc: 'Patient reports' },
+                                { key: 'O', label: 'Objective', desc: 'Exam findings' },
+                                { key: 'A', label: 'Assessment', desc: 'Diagnosis' },
+                                { key: 'P', label: 'Plan', desc: 'Treatment' }
+                              ].map((section) => (
+                                <button
+                                  key={section.key}
+                                  onClick={() => {
+                                    setActiveSOAPSection(section.key as 'S' | 'O' | 'A' | 'P');
+                                    loadSOAPSuggestions(section.key as 'S' | 'O' | 'A' | 'P', selectedPatient);
+                                  }}
+                                  className={`p-3 rounded-lg text-left transition-colors ${
+                                    activeSOAPSection === section.key
+                                      ? 'bg-green-600 text-white'
+                                      : 'bg-white text-gray-700 hover:bg-green-100'
+                                  }`}
+                                >
+                                  <div className="font-semibold">{section.key} - {section.label}</div>
+                                  <div className="text-xs opacity-75">{section.desc}</div>
+                                </button>
+                              ))}
+                            </div>
+
+                            <div className="text-center">
+                              <div className="text-sm text-gray-600 mb-2">Active Section:</div>
+                              <div className="text-lg font-bold text-green-600">
+                                {activeSOAPSection} - {
+                                  activeSOAPSection === 'S' ? 'Subjective' :
+                                  activeSOAPSection === 'O' ? 'Objective' :
+                                  activeSOAPSection === 'A' ? 'Assessment' : 'Plan'
+                                }
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* SOAP Notes Editor */}
+                    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                      <div className="flex items-center justify-between mb-4">
+                        <h4 className="text-lg font-semibold text-gray-900">
+                          {activeSOAPSection} Section - {
+                            activeSOAPSection === 'S' ? 'Subjective (Patient Reports)' :
+                            activeSOAPSection === 'O' ? 'Objective (Examination Findings)' :
+                            activeSOAPSection === 'A' ? 'Assessment (Clinical Diagnosis)' : 'Plan (Treatment & Follow-up)'
+                          }
+                        </h4>
+                        <div className="flex space-x-2">
+                          {['S', 'O', 'A', 'P'].map((section) => (
+                            <button
+                              key={section}
+                              onClick={() => {
+                                setActiveSOAPSection(section as 'S' | 'O' | 'A' | 'P');
+                                loadSOAPSuggestions(section as 'S' | 'O' | 'A' | 'P', selectedPatient);
+                              }}
+                              className={`px-3 py-1 rounded text-sm font-medium transition-colors ${
+                                activeSOAPSection === section
+                                  ? 'bg-blue-600 text-white'
+                                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                              }`}
+                            >
+                              {section}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      <textarea
+                        value={soapNotes[{
+                          'S': 'subjective',
+                          'O': 'objective',
+                          'A': 'assessment',
+                          'P': 'plan'
+                        }[activeSOAPSection] as keyof typeof soapNotes]}
+                        onChange={(e) => {
+                          const sectionKey = {
+                            'S': 'subjective',
+                            'O': 'objective',
+                            'A': 'assessment',
+                            'P': 'plan'
+                          }[activeSOAPSection] as keyof typeof soapNotes;
+
+                          setSOAPNotes(prev => ({
+                            ...prev,
+                            [sectionKey]: e.target.value
+                          }));
+                        }}
+                        className="w-full h-64 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm font-mono"
+                        placeholder={`Enter ${activeSOAPSection} section documentation...`}
+                      />
+
+                      <div className="mt-4 flex justify-between items-center">
+                        <div className="text-sm text-gray-500">
+                          Use the suggestions panel to enhance your documentation
+                        </div>
+                        <button
+                          onClick={handleGeneratePrescription}
+                          disabled={isGeneratingPrescription}
+                          className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-md transition-colors flex items-center disabled:opacity-50"
+                        >
+                          {isGeneratingPrescription ? (
+                            <LoadingSpinner size="sm" text="Generating..." />
+                          ) : (
+                            <>
+                              <Icons.FileText className="h-4 w-4 mr-2" />
+                              Generate Prescription from SOAP
+                            </>
+                          )}
+                        </button>
+                      </div>
+                    </div>
                   </div>
                 )}
 
