@@ -3,6 +3,7 @@ import { User } from '../types/roleTypes';
 import { AuthProvider, useAuth } from './RoleBasedAuth';
 import UnifiedLoginInterface from './UnifiedLoginInterface';
 import PatientDashboard from './PatientDashboard';
+import DoctorDashboard from './DoctorDashboard';
 import PharmacyManagerDashboard from './PharmacyManagerDashboard';
 import LabManagerDashboard from './LabManagerDashboard';
 import ClinicCoordinatorDashboard from './ClinicCoordinatorDashboard';
@@ -104,56 +105,7 @@ const RoleBasedAppContent: React.FC = () => {
         return <MarketplaceManagerDashboard user={user} onLogout={handleLogout} />;
       
       case 'doctor':
-        return (
-          <div className="min-h-screen bg-gray-50">
-            <div className="bg-white shadow-sm border-b">
-              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div className="flex justify-between items-center py-4">
-                  <div className="flex items-center">
-                    <Icons.Stethoscope className="h-8 w-8 text-blue-600 mr-3" />
-                    <div>
-                      <h1 className="text-2xl font-bold text-gray-900">Doctor Dashboard</h1>
-                      <p className="text-sm text-gray-600">{user.organizationName}</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center space-x-4">
-                    <div className="text-right">
-                      <p className="text-sm font-medium text-gray-900">{user.name}</p>
-                      <p className="text-xs text-gray-500">{user.email}</p>
-                    </div>
-                    <button
-                      onClick={handleLogout}
-                      className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-md transition-colors flex items-center"
-                    >
-                      <Icons.LogOut className="h-4 w-4 mr-2" />
-                      Logout
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-            
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8 text-center">
-                <Icons.Stethoscope className="h-16 w-16 text-blue-600 mx-auto mb-4" />
-                <h2 className="text-2xl font-bold text-gray-900 mb-4">Doctor Interface</h2>
-                <p className="text-gray-600 mb-6">
-                  The doctor interface integrates with the existing AIPC clinical decision support system.
-                  Access the main AIPC application for full clinical features.
-                </p>
-                <div className="flex justify-center space-x-4">
-                  <button
-                    onClick={() => window.open('/', '_blank')}
-                    className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-md transition-colors flex items-center"
-                  >
-                    <Icons.ExternalLink className="h-4 w-4 mr-2" />
-                    Open AIPC Clinical System
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        );
+        return <DoctorDashboard user={user} onLogout={handleLogout} />;
       
       default:
         return (
