@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { User } from '../types/roleTypes';
 import { Icons } from '../constants';
-import { PatientProfile, Appointment, ProvisionalDiagnosisResult, ChatMessage, Prescription } from '../types';
-import { generateDoctorNotes, generatePrescriptionWithEducation } from '../services/geminiService';
+import { PatientProfile, Appointment, ProvisionalDiagnosisResult, ChatMessage, Prescription, DoctorNoteSuggestion } from '../types';
+import { generateDoctorNotes, generatePrescriptionWithEducation, generateDoctorNoteSuggestions } from '../services/geminiService';
 import LoadingSpinner from './LoadingSpinner';
 
 interface DoctorDashboardProps {
@@ -27,6 +27,9 @@ const DoctorDashboard: React.FC<DoctorDashboardProps> = ({ user, onLogout }) => 
   const [isGeneratingNotes, setIsGeneratingNotes] = useState(false);
   const [isGeneratingPrescription, setIsGeneratingPrescription] = useState(false);
   const [prescription, setPrescription] = useState<Prescription | null>(null);
+  const [noteSuggestions, setNoteSuggestions] = useState<DoctorNoteSuggestion[]>([]);
+  const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false);
+  const [showSuggestions, setShowSuggestions] = useState(false);
 
   // Sample patient cases for demonstration
   const [patientCases] = useState<PatientCase[]>([
@@ -59,6 +62,49 @@ const DoctorDashboard: React.FC<DoctorDashboardProps> = ({ user, onLogout }) => 
     }
   ]);
 
+  // Fallback clinical note templates
+  const generateFallbackNotes = (patient: PatientCase): string => {
+    const urgencyNote = patient.urgency === 'emergency' ? 'URGENT - ' : patient.urgency === 'urgent' ? 'Priority - ' : '';
+
+    return `${urgencyNote}Clinical Assessment for ${patient.patientName}
+
+CHIEF COMPLAINT:
+${patient.symptoms}
+
+PATIENT INFORMATION:
+- Age: ${patient.age} years
+- Appointment: ${patient.appointmentTime.toLocaleString()}
+- Status: ${patient.status.replace('_', ' ')}
+
+CLINICAL NOTES:
+- Patient presents with: ${patient.symptoms}
+- Duration and onset: [To be documented during examination]
+- Associated symptoms: [To be assessed]
+- Pain scale (if applicable): [1-10 scale]
+- Vital signs: [To be recorded]
+
+ASSESSMENT:
+- Initial impression: [Based on presenting symptoms]
+- Differential diagnosis considerations:
+  * Primary consideration: [Most likely diagnosis]
+  * Alternative considerations: [Other possibilities]
+
+PLAN:
+- Further evaluation needed: [Specify tests/examinations]
+- Treatment recommendations: [Initial management]
+- Follow-up instructions: [Patient guidance]
+- Red flag symptoms to watch for: [Warning signs]
+
+NEXT STEPS:
+- [ ] Complete physical examination
+- [ ] Review medical history
+- [ ] Order appropriate tests if indicated
+- [ ] Discuss treatment options with patient
+- [ ] Schedule follow-up as needed
+
+Notes generated at: ${new Date().toLocaleString()}`;
+  };
+
   const handleGenerateNotes = async (patient: PatientCase) => {
     setIsGeneratingNotes(true);
     try {
@@ -76,14 +122,102 @@ const DoctorDashboard: React.FC<DoctorDashboardProps> = ({ user, onLogout }) => 
         'Initial Assessment Required',
         patientProfile
       );
-      
-      setDoctorNotes(notes || 'Unable to generate notes at this time.');
+
+      // Check if API call failed and use fallback
+      if (!notes || notes.includes('Error:') || notes.includes('Could not generate')) {
+        console.log('API failed, using fallback clinical notes template');
+        setDoctorNotes(generateFallbackNotes(patient));
+        setShowSuggestions(true);
+        await loadNoteSuggestions(patient);
+      } else {
+        setDoctorNotes(notes);
+        setShowSuggestions(true);
+        await loadNoteSuggestions(patient);
+      }
     } catch (error) {
       console.error('Error generating notes:', error);
-      setDoctorNotes('Error generating notes. Please try again.');
+      setDoctorNotes(generateFallbackNotes(patient));
+      setShowSuggestions(true);
+      await loadNoteSuggestions(patient);
     } finally {
       setIsGeneratingNotes(false);
     }
+  };
+
+  const loadNoteSuggestions = async (patient: PatientCase) => {
+    setIsLoadingSuggestions(true);
+    try {
+      const patientProfile: PatientProfile = {
+        name: patient.patientName,
+        age: patient.age,
+        gender: 'Unknown',
+        medicalHistory: [],
+        currentMedications: [],
+        allergies: []
+      };
+
+      const suggestions = await generateDoctorNoteSuggestions(
+        doctorNotes,
+        'Initial Assessment Required',
+        patientProfile
+      );
+
+      if (suggestions && suggestions.length > 0) {
+        setNoteSuggestions(suggestions);
+      } else {
+        // Fallback suggestions based on symptoms
+        setNoteSuggestions(generateFallbackSuggestions(patient));
+      }
+    } catch (error) {
+      console.error('Error loading suggestions:', error);
+      setNoteSuggestions(generateFallbackSuggestions(patient));
+    } finally {
+      setIsLoadingSuggestions(false);
+    }
+  };
+
+  const generateFallbackSuggestions = (patient: PatientCase): DoctorNoteSuggestion[] => {
+    const suggestions: DoctorNoteSuggestion[] = [];
+
+    // Add symptom-specific suggestions
+    if (patient.symptoms.toLowerCase().includes('chest pain')) {
+      suggestions.push(
+        { suggestion: 'Assess for cardiac risk factors (hypertension, diabetes, smoking history)', type: 'meta-finding' },
+        { suggestion: 'Consider ECG and cardiac enzymes if indicated', type: 'autocomplete' }
+      );
+    }
+
+    if (patient.symptoms.toLowerCase().includes('cough')) {
+      suggestions.push(
+        { suggestion: 'Evaluate for respiratory symptoms: dyspnea, wheezing, sputum production', type: 'meta-finding' },
+        { suggestion: 'Consider chest X-ray if persistent or concerning features', type: 'autocomplete' }
+      );
+    }
+
+    if (patient.symptoms.toLowerCase().includes('fever')) {
+      suggestions.push(
+        { suggestion: 'Document fever pattern, associated chills, and response to antipyretics', type: 'meta-finding' },
+        { suggestion: 'Consider infectious workup including CBC with differential', type: 'autocomplete' }
+      );
+    }
+
+    // Add general suggestions
+    suggestions.push(
+      { suggestion: 'Review current medications and allergies', type: 'meta-finding' },
+      { suggestion: 'Document social history including smoking, alcohol, and drug use', type: 'autocomplete' }
+    );
+
+    return suggestions.slice(0, 4); // Limit to 4 suggestions
+  };
+
+  const applySuggestion = (suggestion: DoctorNoteSuggestion) => {
+    setDoctorNotes(prev => {
+      if (suggestion.type === 'autocomplete') {
+        return prev + '\n\n' + suggestion.suggestion;
+      } else {
+        return prev + '\n\nADDITIONAL CONSIDERATIONS:\n- ' + suggestion.suggestion;
+      }
+    });
   };
 
   const handleGeneratePrescription = async () => {
@@ -401,6 +535,62 @@ const DoctorDashboard: React.FC<DoctorDashboardProps> = ({ user, onLogout }) => 
                     </div>
                   </div>
                 </div>
+
+                {/* Clinical Note Suggestions */}
+                {showSuggestions && (
+                  <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="text-lg font-semibold text-gray-900">Clinical Note Suggestions</h3>
+                      <button
+                        onClick={() => setShowSuggestions(false)}
+                        className="text-gray-400 hover:text-gray-600"
+                      >
+                        <Icons.X className="h-5 w-5" />
+                      </button>
+                    </div>
+
+                    {isLoadingSuggestions ? (
+                      <div className="flex items-center justify-center py-4">
+                        <LoadingSpinner size="sm" text="Loading suggestions..." />
+                      </div>
+                    ) : (
+                      <div className="space-y-3">
+                        {noteSuggestions.map((suggestion, index) => (
+                          <div
+                            key={index}
+                            className="flex items-start justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+                          >
+                            <div className="flex-1">
+                              <div className="flex items-center space-x-2 mb-1">
+                                <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                                  suggestion.type === 'autocomplete'
+                                    ? 'bg-blue-100 text-blue-800'
+                                    : 'bg-purple-100 text-purple-800'
+                                }`}>
+                                  {suggestion.type === 'autocomplete' ? 'Complete' : 'Consider'}
+                                </span>
+                              </div>
+                              <p className="text-sm text-gray-700">{suggestion.suggestion}</p>
+                            </div>
+                            <button
+                              onClick={() => applySuggestion(suggestion)}
+                              className="ml-3 bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded-md text-xs transition-colors"
+                            >
+                              Apply
+                            </button>
+                          </div>
+                        ))}
+
+                        {noteSuggestions.length === 0 && (
+                          <div className="text-center py-4 text-gray-500">
+                            <Icons.Lightbulb className="h-8 w-8 mx-auto mb-2 text-gray-400" />
+                            <p className="text-sm">No suggestions available at this time.</p>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )}
 
                 {/* Generated Prescription */}
                 {prescription && (
