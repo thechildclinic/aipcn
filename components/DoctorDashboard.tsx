@@ -733,18 +733,18 @@ Notes generated at: ${new Date().toLocaleString()}`;
                         </div>
                       </div>
 
-                      {/* Three-Panel Layout */}
-                      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                        {/* Left Panel: Patient History */}
+                      {/* Enhanced Layout: Compact Side Panels + Large Writing Area */}
+                      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+                        {/* Left Panel: Patient History - Compact */}
                         <div className="lg:col-span-1">
-                          <div className="bg-gray-50 rounded-lg p-4 h-96 overflow-y-auto">
-                            <h4 className="font-semibold text-gray-900 mb-3 flex items-center">
+                          <div className="bg-gray-50 rounded-lg p-3 h-80 overflow-y-auto">
+                            <h4 className="font-semibold text-gray-900 mb-3 flex items-center text-sm">
                               <Icons.Clock className="h-4 w-4 mr-2" />
                               Patient History
                             </h4>
-                            <div className="space-y-3">
+                            <div className="space-y-2">
                               {patientHistory.map((item, index) => (
-                                <div key={index} className="text-sm text-gray-700 p-2 bg-white rounded border">
+                                <div key={index} className="text-xs text-gray-700 p-2 bg-white rounded border">
                                   {item}
                                 </div>
                               ))}
@@ -752,33 +752,33 @@ Notes generated at: ${new Date().toLocaleString()}`;
                           </div>
                         </div>
 
-                        {/* Right Panel: Clinical Suggestions */}
+                        {/* Right Panel: Clinical Suggestions - Compact */}
                         <div className="lg:col-span-1">
-                          <div className="bg-blue-50 rounded-lg p-4 h-96 overflow-y-auto">
-                            <h4 className="font-semibold text-gray-900 mb-3 flex items-center">
+                          <div className="bg-blue-50 rounded-lg p-3 h-80 overflow-y-auto">
+                            <h4 className="font-semibold text-gray-900 mb-3 flex items-center text-sm">
                               <Icons.Lightbulb className="h-4 w-4 mr-2" />
-                              {activeSOAPSection} Section Suggestions
+                              {activeSOAPSection} Suggestions
                             </h4>
                             <div className="space-y-2">
                               {noteSuggestions.map((suggestion, index) => (
                                 <div
                                   key={index}
-                                  className="bg-white p-3 rounded border hover:bg-gray-50 transition-colors"
+                                  className="bg-white p-2 rounded border hover:bg-gray-50 transition-colors"
                                 >
                                   <div className="flex items-start justify-between">
                                     <div className="flex-1">
-                                      <span className={`px-2 py-1 rounded-full text-xs font-medium mb-2 inline-block ${
+                                      <span className={`px-1 py-0.5 rounded text-xs font-medium mb-1 inline-block ${
                                         suggestion.type === 'autocomplete'
                                           ? 'bg-blue-100 text-blue-800'
                                           : 'bg-purple-100 text-purple-800'
                                       }`}>
                                         {suggestion.type === 'autocomplete' ? 'Template' : 'Consider'}
                                       </span>
-                                      <p className="text-sm text-gray-700">{suggestion.suggestion}</p>
+                                      <p className="text-xs text-gray-700">{suggestion.suggestion}</p>
                                     </div>
                                     <button
                                       onClick={() => applySuggestion(suggestion)}
-                                      className="ml-2 bg-blue-600 hover:bg-blue-700 text-white px-2 py-1 rounded text-xs transition-colors"
+                                      className="ml-1 bg-blue-600 hover:bg-blue-700 text-white px-2 py-1 rounded text-xs transition-colors"
                                     >
                                       Apply
                                     </button>
@@ -789,16 +789,16 @@ Notes generated at: ${new Date().toLocaleString()}`;
                           </div>
                         </div>
 
-                        {/* Center Panel: SOAP Section Tabs */}
-                        <div className="lg:col-span-1">
-                          <div className="bg-green-50 rounded-lg p-4 h-96">
-                            <h4 className="font-semibold text-gray-900 mb-3">SOAP Navigation</h4>
-                            <div className="grid grid-cols-2 gap-2 mb-4">
+                        {/* Center Panel: SOAP Navigation - Compact */}
+                        <div className="lg:col-span-2">
+                          <div className="bg-green-50 rounded-lg p-3 h-80">
+                            <h4 className="font-semibold text-gray-900 mb-3 text-sm">SOAP Navigation</h4>
+                            <div className="grid grid-cols-4 gap-2 mb-4">
                               {[
-                                { key: 'S', label: 'Subjective', desc: 'Patient reports' },
-                                { key: 'O', label: 'Objective', desc: 'Exam findings' },
-                                { key: 'A', label: 'Assessment', desc: 'Diagnosis' },
-                                { key: 'P', label: 'Plan', desc: 'Treatment' }
+                                { key: 'S', label: 'Subjective', desc: 'Patient reports', color: 'bg-blue-600' },
+                                { key: 'O', label: 'Objective', desc: 'Exam findings', color: 'bg-green-600' },
+                                { key: 'A', label: 'Assessment', desc: 'Diagnosis', color: 'bg-orange-600' },
+                                { key: 'P', label: 'Plan', desc: 'Treatment', color: 'bg-purple-600' }
                               ].map((section) => (
                                 <button
                                   key={section.key}
@@ -806,26 +806,36 @@ Notes generated at: ${new Date().toLocaleString()}`;
                                     setActiveSOAPSection(section.key as 'S' | 'O' | 'A' | 'P');
                                     loadSOAPSuggestions(section.key as 'S' | 'O' | 'A' | 'P', selectedPatient);
                                   }}
-                                  className={`p-3 rounded-lg text-left transition-colors ${
+                                  className={`p-3 rounded-lg text-center transition-colors ${
                                     activeSOAPSection === section.key
-                                      ? 'bg-green-600 text-white'
-                                      : 'bg-white text-gray-700 hover:bg-green-100'
+                                      ? `${section.color} text-white shadow-lg`
+                                      : 'bg-white text-gray-700 hover:bg-gray-100 border'
                                   }`}
                                 >
-                                  <div className="font-semibold">{section.key} - {section.label}</div>
+                                  <div className="font-bold text-lg">{section.key}</div>
+                                  <div className="text-xs font-medium">{section.label}</div>
                                   <div className="text-xs opacity-75">{section.desc}</div>
                                 </button>
                               ))}
                             </div>
 
-                            <div className="text-center">
-                              <div className="text-sm text-gray-600 mb-2">Active Section:</div>
-                              <div className="text-lg font-bold text-green-600">
+                            <div className="text-center bg-white rounded-lg p-3 border">
+                              <div className="text-sm text-gray-600 mb-1">Currently Editing:</div>
+                              <div className={`text-xl font-bold ${
+                                activeSOAPSection === 'S' ? 'text-blue-600' :
+                                activeSOAPSection === 'O' ? 'text-green-600' :
+                                activeSOAPSection === 'A' ? 'text-orange-600' : 'text-purple-600'
+                              }`}>
                                 {activeSOAPSection} - {
                                   activeSOAPSection === 'S' ? 'Subjective' :
                                   activeSOAPSection === 'O' ? 'Objective' :
                                   activeSOAPSection === 'A' ? 'Assessment' : 'Plan'
                                 }
+                              </div>
+                              <div className="text-sm text-gray-500 mt-1">
+                                {activeSOAPSection === 'S' ? 'Document patient-reported symptoms and history' :
+                                 activeSOAPSection === 'O' ? 'Record examination findings and vital signs' :
+                                 activeSOAPSection === 'A' ? 'Clinical diagnosis and assessment' : 'Treatment plan and follow-up'}
                               </div>
                             </div>
                           </div>
@@ -833,78 +843,148 @@ Notes generated at: ${new Date().toLocaleString()}`;
                       </div>
                     </div>
 
-                    {/* SOAP Notes Editor */}
-                    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                      <div className="flex items-center justify-between mb-4">
-                        <h4 className="text-lg font-semibold text-gray-900">
-                          {activeSOAPSection} Section - {
-                            activeSOAPSection === 'S' ? 'Subjective (Patient Reports)' :
-                            activeSOAPSection === 'O' ? 'Objective (Examination Findings)' :
-                            activeSOAPSection === 'A' ? 'Assessment (Clinical Diagnosis)' : 'Plan (Treatment & Follow-up)'
-                          }
-                        </h4>
-                        <div className="flex space-x-2">
-                          {['S', 'O', 'A', 'P'].map((section) => (
+                    {/* ENHANCED SOAP Notes Editor - Primary Writing Area */}
+                    <div className="bg-white rounded-lg shadow-lg border-2 border-blue-200 p-8">
+                      <div className="flex items-center justify-between mb-6">
+                        <div className="flex items-center space-x-4">
+                          <div className={`w-4 h-4 rounded-full ${
+                            activeSOAPSection === 'S' ? 'bg-blue-600' :
+                            activeSOAPSection === 'O' ? 'bg-green-600' :
+                            activeSOAPSection === 'A' ? 'bg-orange-600' : 'bg-purple-600'
+                          }`}></div>
+                          <h4 className="text-2xl font-bold text-gray-900">
+                            {activeSOAPSection} Section - {
+                              activeSOAPSection === 'S' ? 'Subjective (Patient Reports)' :
+                              activeSOAPSection === 'O' ? 'Objective (Examination Findings)' :
+                              activeSOAPSection === 'A' ? 'Assessment (Clinical Diagnosis)' : 'Plan (Treatment & Follow-up)'
+                            }
+                          </h4>
+                        </div>
+                        <div className="flex space-x-3">
+                          {[
+                            { key: 'S', label: 'Subjective', color: 'bg-blue-600' },
+                            { key: 'O', label: 'Objective', color: 'bg-green-600' },
+                            { key: 'A', label: 'Assessment', color: 'bg-orange-600' },
+                            { key: 'P', label: 'Plan', color: 'bg-purple-600' }
+                          ].map((section) => (
                             <button
-                              key={section}
+                              key={section.key}
                               onClick={() => {
-                                setActiveSOAPSection(section as 'S' | 'O' | 'A' | 'P');
-                                loadSOAPSuggestions(section as 'S' | 'O' | 'A' | 'P', selectedPatient);
+                                setActiveSOAPSection(section.key as 'S' | 'O' | 'A' | 'P');
+                                loadSOAPSuggestions(section.key as 'S' | 'O' | 'A' | 'P', selectedPatient);
                               }}
-                              className={`px-3 py-1 rounded text-sm font-medium transition-colors ${
-                                activeSOAPSection === section
-                                  ? 'bg-blue-600 text-white'
+                              className={`px-4 py-2 rounded-lg text-sm font-bold transition-all transform hover:scale-105 ${
+                                activeSOAPSection === section.key
+                                  ? `${section.color} text-white shadow-lg`
                                   : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                               }`}
                             >
-                              {section}
+                              {section.key} - {section.label}
                             </button>
                           ))}
                         </div>
                       </div>
 
-                      <textarea
-                        value={soapNotes[{
-                          'S': 'subjective',
-                          'O': 'objective',
-                          'A': 'assessment',
-                          'P': 'plan'
-                        }[activeSOAPSection] as keyof typeof soapNotes]}
-                        onChange={(e) => {
-                          const sectionKey = {
+                      {/* Large, Prominent Writing Area */}
+                      <div className="relative">
+                        <textarea
+                          value={soapNotes[{
                             'S': 'subjective',
                             'O': 'objective',
                             'A': 'assessment',
                             'P': 'plan'
-                          }[activeSOAPSection] as keyof typeof soapNotes;
+                          }[activeSOAPSection] as keyof typeof soapNotes]}
+                          onChange={(e) => {
+                            const sectionKey = {
+                              'S': 'subjective',
+                              'O': 'objective',
+                              'A': 'assessment',
+                              'P': 'plan'
+                            }[activeSOAPSection] as keyof typeof soapNotes;
 
-                          setSOAPNotes(prev => ({
-                            ...prev,
-                            [sectionKey]: e.target.value
-                          }));
-                        }}
-                        className="w-full h-64 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm font-mono"
-                        placeholder={`Enter ${activeSOAPSection} section documentation...`}
-                      />
+                            setSOAPNotes(prev => ({
+                              ...prev,
+                              [sectionKey]: e.target.value
+                            }));
+                          }}
+                          className={`w-full h-96 px-6 py-4 border-2 rounded-xl focus:outline-none focus:ring-4 text-base leading-relaxed resize-none ${
+                            activeSOAPSection === 'S' ? 'border-blue-300 focus:border-blue-500 focus:ring-blue-200' :
+                            activeSOAPSection === 'O' ? 'border-green-300 focus:border-green-500 focus:ring-green-200' :
+                            activeSOAPSection === 'A' ? 'border-orange-300 focus:border-orange-500 focus:ring-orange-200' :
+                            'border-purple-300 focus:border-purple-500 focus:ring-purple-200'
+                          }`}
+                          placeholder={`Enter detailed ${
+                            activeSOAPSection === 'S' ? 'patient-reported symptoms, history, and concerns' :
+                            activeSOAPSection === 'O' ? 'examination findings, vital signs, and objective data' :
+                            activeSOAPSection === 'A' ? 'clinical assessment, diagnosis, and reasoning' :
+                            'treatment plan, medications, and follow-up instructions'
+                          }...`}
+                          style={{ fontFamily: 'ui-monospace, SFMono-Regular, "SF Mono", Consolas, "Liberation Mono", Menlo, monospace' }}
+                        />
 
-                      <div className="mt-4 flex justify-between items-center">
-                        <div className="text-sm text-gray-500">
-                          Use the suggestions panel to enhance your documentation
+                        {/* Character Count and Section Indicator */}
+                        <div className="absolute bottom-4 right-4 bg-white bg-opacity-90 px-3 py-1 rounded-lg shadow-sm">
+                          <span className="text-sm text-gray-500">
+                            {soapNotes[{
+                              'S': 'subjective',
+                              'O': 'objective',
+                              'A': 'assessment',
+                              'P': 'plan'
+                            }[activeSOAPSection] as keyof typeof soapNotes].length} characters
+                          </span>
                         </div>
-                        <button
-                          onClick={handleGeneratePrescription}
-                          disabled={isGeneratingPrescription}
-                          className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-md transition-colors flex items-center disabled:opacity-50"
-                        >
-                          {isGeneratingPrescription ? (
-                            <LoadingSpinner size="sm" text="Generating..." />
-                          ) : (
-                            <>
-                              <Icons.FileText className="h-4 w-4 mr-2" />
-                              Generate Prescription from SOAP
-                            </>
-                          )}
-                        </button>
+                      </div>
+
+                      {/* Enhanced Action Bar */}
+                      <div className="mt-6 flex justify-between items-center bg-gray-50 rounded-lg p-4">
+                        <div className="flex items-center space-x-4">
+                          <div className="text-sm text-gray-600">
+                            💡 <strong>Tip:</strong> Use the suggestions panel on the right to enhance your documentation
+                          </div>
+                          <div className={`px-3 py-1 rounded-full text-xs font-medium ${
+                            activeSOAPSection === 'S' ? 'bg-blue-100 text-blue-800' :
+                            activeSOAPSection === 'O' ? 'bg-green-100 text-green-800' :
+                            activeSOAPSection === 'A' ? 'bg-orange-100 text-orange-800' :
+                            'bg-purple-100 text-purple-800'
+                          }`}>
+                            Currently editing: {activeSOAPSection} Section
+                          </div>
+                        </div>
+                        <div className="flex space-x-3">
+                          <button
+                            onClick={() => {
+                              const sectionKey = {
+                                'S': 'subjective',
+                                'O': 'objective',
+                                'A': 'assessment',
+                                'P': 'plan'
+                              }[activeSOAPSection] as keyof typeof soapNotes;
+
+                              setSOAPNotes(prev => ({
+                                ...prev,
+                                [sectionKey]: ''
+                              }));
+                            }}
+                            className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg transition-colors flex items-center"
+                          >
+                            <Icons.X className="h-4 w-4 mr-2" />
+                            Clear Section
+                          </button>
+                          <button
+                            onClick={handleGeneratePrescription}
+                            disabled={isGeneratingPrescription}
+                            className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg transition-colors flex items-center disabled:opacity-50 shadow-lg"
+                          >
+                            {isGeneratingPrescription ? (
+                              <LoadingSpinner size="sm" text="Generating..." />
+                            ) : (
+                              <>
+                                <Icons.FileText className="h-4 w-4 mr-2" />
+                                Generate Prescription from SOAP
+                              </>
+                            )}
+                          </button>
+                        </div>
                       </div>
                     </div>
                   </div>
