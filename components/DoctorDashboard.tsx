@@ -31,16 +31,41 @@ const DoctorDashboard: React.FC<DoctorDashboardProps> = ({ user, onLogout }) => 
   const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(false);
 
-  // SOAP Notes state
-  const [activeSOAPSection, setActiveSOAPSection] = useState<'S' | 'O' | 'A' | 'P'>('S');
-  const [soapNotes, setSOAPNotes] = useState({
-    subjective: '',
-    objective: '',
-    assessment: '',
-    plan: ''
+  // Clinical Workflow State
+  const [currentStep, setCurrentStep] = useState<1 | 2 | 3 | 4 | 5>(1);
+  const [clinicalNotes, setClinicalNotes] = useState('');
+  const [differentialDiagnoses, setDifferentialDiagnoses] = useState<Array<{
+    diagnosis: string;
+    confidence: number;
+    reasoning: string;
+    selected: boolean;
+  }>>([]);
+  const [selectedDiagnosis, setSelectedDiagnosis] = useState<string>('');
+  const [treatmentPlan, setTreatmentPlan] = useState<Array<{
+    medication: string;
+    dosage: string;
+    frequency: string;
+    duration: string;
+    instructions: string;
+    selected: boolean;
+  }>>([]);
+  const [patientHistory, setPatientHistory] = useState<{
+    demographics: { name: string; age: number; gender: string; };
+    previousVisits: Array<{ date: string; diagnosis: string; treatment: string; }>;
+    medicalConditions: string[];
+    currentMedications: string[];
+    allergies: string[];
+    vitalSigns: { bp: string; hr: string; temp: string; weight: string; };
+  }>({
+    demographics: { name: '', age: 0, gender: '' },
+    previousVisits: [],
+    medicalConditions: [],
+    currentMedications: [],
+    allergies: [],
+    vitalSigns: { bp: '', hr: '', temp: '', weight: '' }
   });
-  const [showSOAPEditor, setShowSOAPEditor] = useState(false);
-  const [patientHistory, setPatientHistory] = useState<string[]>([]);
+  const [isGeneratingDifferentials, setIsGeneratingDifferentials] = useState(false);
+  const [isGeneratingTreatment, setIsGeneratingTreatment] = useState(false);
 
   // Sample patient cases for demonstration
   const [patientCases] = useState<PatientCase[]>([
@@ -334,6 +359,166 @@ Notes generated at: ${new Date().toLocaleString()}`;
     setPatientHistory(history);
   };
 
+  // Load comprehensive patient history for clinical workflow
+  const loadComprehensivePatientHistory = (patient: PatientCase) => {
+    const comprehensiveHistory = {
+      demographics: {
+        name: patient.patientName,
+        age: patient.age,
+        gender: 'Male' // This would come from patient data
+      },
+      previousVisits: [
+        {
+          date: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toLocaleDateString(),
+          diagnosis: 'Routine Annual Physical',
+          treatment: 'Preventive care counseling, lab orders'
+        },
+        {
+          date: new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toLocaleDateString(),
+          diagnosis: 'Hypertension Follow-up',
+          treatment: 'Medication adjustment, lifestyle counseling'
+        }
+      ],
+      medicalConditions: ['Hypertension (controlled)', 'Type 2 Diabetes (well-managed)', 'Hyperlipidemia'],
+      currentMedications: [
+        'Metformin 500mg BID',
+        'Lisinopril 10mg daily',
+        'Atorvastatin 20mg daily',
+        'Aspirin 81mg daily'
+      ],
+      allergies: ['Penicillin (rash)', 'Sulfa drugs (GI upset)'],
+      vitalSigns: {
+        bp: '128/82 mmHg',
+        hr: '72 bpm',
+        temp: '98.6°F',
+        weight: '165 lbs'
+      }
+    };
+    setPatientHistory(comprehensiveHistory);
+  };
+
+  // Generate AI differential diagnoses based on clinical notes
+  const generateDifferentialDiagnoses = async () => {
+    if (!clinicalNotes.trim()) return;
+
+    setIsGeneratingDifferentials(true);
+    try {
+      // Simulate AI-generated differential diagnoses based on symptoms
+      const symptomBasedDifferentials = selectedPatient?.symptoms.toLowerCase().includes('chest pain') ? [
+        {
+          diagnosis: 'Acute Coronary Syndrome',
+          confidence: 75,
+          reasoning: 'Chest pain with associated symptoms warrants immediate cardiac evaluation. Risk factors and presentation pattern support this consideration.',
+          selected: false
+        },
+        {
+          diagnosis: 'Gastroesophageal Reflux Disease',
+          confidence: 60,
+          reasoning: 'Chest discomfort can be related to acid reflux, especially if associated with meals or lying down.',
+          selected: false
+        },
+        {
+          diagnosis: 'Musculoskeletal Chest Pain',
+          confidence: 45,
+          reasoning: 'Chest wall pain from muscle strain or costochondritis, particularly if pain is reproducible with movement.',
+          selected: false
+        }
+      ] : [
+        {
+          diagnosis: 'Viral Upper Respiratory Infection',
+          confidence: 85,
+          reasoning: 'Symptoms consistent with viral etiology: gradual onset, low-grade fever, rhinorrhea, and cough without purulent sputum.',
+          selected: false
+        },
+        {
+          diagnosis: 'Acute Bronchitis',
+          confidence: 70,
+          reasoning: 'Persistent cough with clear sputum production, chest discomfort, and recent viral prodrome support this diagnosis.',
+          selected: false
+        },
+        {
+          diagnosis: 'Allergic Rhinitis',
+          confidence: 45,
+          reasoning: 'Seasonal pattern and clear nasal discharge could indicate allergic component, though fever makes this less likely.',
+          selected: false
+        }
+      ];
+
+      setDifferentialDiagnoses(symptomBasedDifferentials);
+    } catch (error) {
+      console.error('Error generating differentials:', error);
+    } finally {
+      setIsGeneratingDifferentials(false);
+    }
+  };
+
+  // Generate AI treatment recommendations based on selected diagnosis
+  const generateTreatmentPlan = async () => {
+    if (!selectedDiagnosis) return;
+
+    setIsGeneratingTreatment(true);
+    try {
+      // Simulate AI-generated treatment plan based on diagnosis
+      const diagnosisBasedTreatment = selectedDiagnosis.toLowerCase().includes('coronary') ? [
+        {
+          medication: 'Aspirin',
+          dosage: '81mg',
+          frequency: 'Daily',
+          duration: 'Ongoing',
+          instructions: 'Take with food. For cardioprotection.',
+          selected: true
+        },
+        {
+          medication: 'Atorvastatin',
+          dosage: '40mg',
+          frequency: 'Daily at bedtime',
+          duration: 'Ongoing',
+          instructions: 'Monitor liver function. Avoid grapefruit.',
+          selected: true
+        },
+        {
+          medication: 'Metoprolol',
+          dosage: '25mg',
+          frequency: 'Twice daily',
+          duration: 'Ongoing',
+          instructions: 'Monitor heart rate and blood pressure.',
+          selected: false
+        }
+      ] : [
+        {
+          medication: 'Acetaminophen',
+          dosage: '650mg',
+          frequency: 'Every 6 hours',
+          duration: '5-7 days',
+          instructions: 'Take with food. Do not exceed 3000mg daily.',
+          selected: true
+        },
+        {
+          medication: 'Dextromethorphan',
+          dosage: '15mg',
+          frequency: 'Every 4 hours',
+          duration: '7-10 days',
+          instructions: 'For cough suppression. Take as needed.',
+          selected: true
+        },
+        {
+          medication: 'Guaifenesin',
+          dosage: '400mg',
+          frequency: 'Every 4 hours',
+          duration: '7-10 days',
+          instructions: 'Expectorant. Increase fluid intake.',
+          selected: false
+        }
+      ];
+
+      setTreatmentPlan(diagnosisBasedTreatment);
+    } catch (error) {
+      console.error('Error generating treatment plan:', error);
+    } finally {
+      setIsGeneratingTreatment(false);
+    }
+  };
+
   const handleGeneratePrescription = async () => {
     if (!selectedPatient || !doctorNotes.trim()) {
       alert('Please select a patient and generate notes first.');
@@ -560,106 +745,374 @@ Notes generated at: ${new Date().toLocaleString()}`;
           <div className="space-y-6">
             {selectedPatient ? (
               <>
-                {/* Patient Header */}
-                <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                  <div className="flex items-center justify-between">
+                {/* Clinical Workflow Header with Progress */}
+                <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg p-6 border border-blue-200">
+                  <div className="flex items-center justify-between mb-4">
                     <div>
-                      <h2 className="text-xl font-bold text-gray-900">{selectedPatient.patientName}</h2>
-                      <p className="text-sm text-gray-600">Age: {selectedPatient.age} | Case ID: {selectedPatient.id}</p>
-                      <div className="flex items-center space-x-2 mt-2">
-                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${getUrgencyColor(selectedPatient.urgency)}`}>
-                          {selectedPatient.urgency}
-                        </span>
-                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(selectedPatient.status)}`}>
-                          {selectedPatient.status.replace('_', ' ')}
-                        </span>
-                      </div>
+                      <h2 className="text-xl font-bold text-blue-900">Clinical Workflow: {selectedPatient.patientName}</h2>
+                      <p className="text-blue-700">Age: {selectedPatient.age} | Chief Complaint: {selectedPatient.symptoms}</p>
                     </div>
                     <button
-                      onClick={() => setSelectedPatient(null)}
-                      className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-md transition-colors"
+                      onClick={() => {
+                        setSelectedPatient(null);
+                        setCurrentStep(1);
+                        setClinicalNotes('');
+                        setDifferentialDiagnoses([]);
+                        setSelectedDiagnosis('');
+                        setTreatmentPlan([]);
+                      }}
+                      className="bg-white hover:bg-gray-50 text-gray-700 px-4 py-2 rounded-md transition-colors border"
                     >
-                      Back to Cases
+                      Exit Workflow
                     </button>
                   </div>
+
+                  {/* Progress Steps */}
+                  <div className="flex items-center justify-between">
+                    {[
+                      { step: 1, label: 'History Review', icon: Icons.Clock },
+                      { step: 2, label: 'Clinical Notes', icon: Icons.FileText },
+                      { step: 3, label: 'Diagnosis', icon: Icons.Search },
+                      { step: 4, label: 'Treatment', icon: Icons.Pill },
+                      { step: 5, label: 'Prescription', icon: Icons.CheckCircle }
+                    ].map(({ step, label, icon: Icon }, index) => (
+                      <div key={step} className="flex items-center">
+                        <div className={`flex items-center justify-center w-12 h-12 rounded-full border-2 transition-all ${
+                          currentStep >= step
+                            ? 'bg-blue-600 border-blue-600 text-white shadow-lg'
+                            : 'bg-white border-gray-300 text-gray-400'
+                        }`}>
+                          {currentStep > step ? (
+                            <Icons.CheckCircle className="h-6 w-6" />
+                          ) : (
+                            <Icon className="h-6 w-6" />
+                          )}
+                        </div>
+                        <div className="ml-3">
+                          <div className={`text-sm font-bold ${
+                            currentStep >= step ? 'text-blue-900' : 'text-gray-500'
+                          }`}>
+                            Step {step}
+                          </div>
+                          <div className={`text-xs ${
+                            currentStep >= step ? 'text-blue-700' : 'text-gray-400'
+                          }`}>
+                            {label}
+                          </div>
+                        </div>
+                        {index < 4 && (
+                          <div className={`w-16 h-1 mx-4 rounded ${
+                            currentStep > step ? 'bg-blue-600' : 'bg-gray-300'
+                          }`} />
+                        )}
+                      </div>
+                    ))}
+                  </div>
                 </div>
 
-                {/* Clinical Tools */}
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  {/* Patient Information & Symptoms */}
-                  <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-4">Patient Information</h3>
-                    <div className="space-y-3">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700">Chief Complaint</label>
-                        <p className="mt-1 text-sm text-gray-900 bg-gray-50 p-3 rounded-md">{selectedPatient.symptoms}</p>
+                {/* Step-by-Step Clinical Workflow */}
+                {currentStep === 1 && (
+                  <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
+                    <div className="flex items-center mb-6">
+                      <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center mr-4">
+                        <Icons.Clock className="h-6 w-6 text-white" />
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-gray-700">Appointment Time</label>
-                        <p className="mt-1 text-sm text-gray-900">{selectedPatient.appointmentTime.toLocaleString()}</p>
+                        <h3 className="text-2xl font-bold text-gray-900">Step 1: Patient History Review</h3>
+                        <p className="text-gray-600">Review comprehensive patient information before clinical assessment</p>
                       </div>
                     </div>
 
-                    <div className="mt-6 space-y-3">
-                      <button
-                        onClick={() => handleGenerateNotes(selectedPatient)}
-                        disabled={isGeneratingNotes}
-                        className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-md transition-colors flex items-center justify-center disabled:opacity-50"
-                      >
-                        {isGeneratingNotes ? (
-                          <LoadingSpinner size="sm" text="Generating AI Notes..." />
-                        ) : (
-                          <>
-                            <Icons.Sparkles className="h-4 w-4 mr-2" />
-                            Generate AI Clinical Notes
-                          </>
-                        )}
-                      </button>
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                      {/* Patient Demographics & Vital Signs */}
+                      <div className="space-y-6">
+                        <div className="bg-blue-50 rounded-lg p-6">
+                          <h4 className="font-semibold text-blue-900 mb-4">Patient Demographics</h4>
+                          <div className="space-y-3">
+                            <div className="flex justify-between">
+                              <span className="text-blue-700">Name:</span>
+                              <span className="font-medium text-blue-900">{patientHistory.demographics.name}</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="text-blue-700">Age:</span>
+                              <span className="font-medium text-blue-900">{patientHistory.demographics.age} years</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="text-blue-700">Gender:</span>
+                              <span className="font-medium text-blue-900">{patientHistory.demographics.gender}</span>
+                            </div>
+                          </div>
+                        </div>
 
+                        <div className="bg-green-50 rounded-lg p-6">
+                          <h4 className="font-semibold text-green-900 mb-4">Current Vital Signs</h4>
+                          <div className="grid grid-cols-2 gap-4">
+                            <div className="text-center">
+                              <div className="text-2xl font-bold text-green-900">{patientHistory.vitalSigns.bp}</div>
+                              <div className="text-sm text-green-700">Blood Pressure</div>
+                            </div>
+                            <div className="text-center">
+                              <div className="text-2xl font-bold text-green-900">{patientHistory.vitalSigns.hr}</div>
+                              <div className="text-sm text-green-700">Heart Rate</div>
+                            </div>
+                            <div className="text-center">
+                              <div className="text-2xl font-bold text-green-900">{patientHistory.vitalSigns.temp}</div>
+                              <div className="text-sm text-green-700">Temperature</div>
+                            </div>
+                            <div className="text-center">
+                              <div className="text-2xl font-bold text-green-900">{patientHistory.vitalSigns.weight}</div>
+                              <div className="text-sm text-green-700">Weight</div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Medical History & Medications */}
+                      <div className="space-y-6">
+                        <div className="bg-orange-50 rounded-lg p-6">
+                          <h4 className="font-semibold text-orange-900 mb-4">Medical Conditions</h4>
+                          <div className="space-y-2">
+                            {patientHistory.medicalConditions.map((condition, index) => (
+                              <div key={index} className="flex items-center">
+                                <Icons.AlertTriangle className="h-4 w-4 text-orange-600 mr-2" />
+                                <span className="text-orange-800">{condition}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+
+                        <div className="bg-purple-50 rounded-lg p-6">
+                          <h4 className="font-semibold text-purple-900 mb-4">Current Medications</h4>
+                          <div className="space-y-2">
+                            {patientHistory.currentMedications.map((medication, index) => (
+                              <div key={index} className="flex items-center">
+                                <Icons.Pill className="h-4 w-4 text-purple-600 mr-2" />
+                                <span className="text-purple-800">{medication}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+
+                        <div className="bg-red-50 rounded-lg p-6">
+                          <h4 className="font-semibold text-red-900 mb-4">Allergies</h4>
+                          <div className="space-y-2">
+                            {patientHistory.allergies.map((allergy, index) => (
+                              <div key={index} className="flex items-center">
+                                <Icons.AlertTriangle className="h-4 w-4 text-red-600 mr-2" />
+                                <span className="text-red-800">{allergy}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="mt-8 flex justify-end">
+                      <button
+                        onClick={() => setCurrentStep(2)}
+                        className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-lg transition-colors flex items-center text-lg font-medium"
+                      >
+                        Proceed to Clinical Documentation
+                        <Icons.ArrowRight className="h-5 w-5 ml-2" />
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {/* Step 2: Clinical Documentation */}
+                {currentStep === 2 && (
+                  <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
+                    <div className="flex items-center mb-6">
+                      <div className="w-10 h-10 bg-green-600 rounded-full flex items-center justify-center mr-4">
+                        <Icons.FileText className="h-6 w-6 text-white" />
+                      </div>
+                      <div>
+                        <h3 className="text-2xl font-bold text-gray-900">Step 2: Clinical Documentation</h3>
+                        <p className="text-gray-600">Document patient encounter with AI assistance</p>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                      {/* Chief Complaint */}
+                      <div className="bg-blue-50 rounded-lg p-4">
+                        <h4 className="font-semibold text-blue-900 mb-3">Chief Complaint</h4>
+                        <p className="text-blue-800 bg-white p-3 rounded border">{selectedPatient.symptoms}</p>
+                      </div>
+
+                      {/* AI Suggestions */}
+                      <div className="bg-purple-50 rounded-lg p-4">
+                        <h4 className="font-semibold text-purple-900 mb-3">AI Suggestions</h4>
+                        <div className="space-y-2">
+                          <div className="bg-white p-2 rounded text-sm text-purple-800">
+                            💡 Consider asking about onset and duration
+                          </div>
+                          <div className="bg-white p-2 rounded text-sm text-purple-800">
+                            💡 Assess pain scale (1-10) if applicable
+                          </div>
+                          <div className="bg-white p-2 rounded text-sm text-purple-800">
+                            💡 Review associated symptoms
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Quick Actions */}
+                      <div className="bg-green-50 rounded-lg p-4">
+                        <h4 className="font-semibold text-green-900 mb-3">Quick Actions</h4>
+                        <div className="space-y-2">
+                          <button className="w-full bg-white hover:bg-gray-50 text-green-800 p-2 rounded text-sm border">
+                            Add HPI Template
+                          </button>
+                          <button className="w-full bg-white hover:bg-gray-50 text-green-800 p-2 rounded text-sm border">
+                            Add ROS Template
+                          </button>
+                          <button className="w-full bg-white hover:bg-gray-50 text-green-800 p-2 rounded text-sm border">
+                            Add PE Template
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Large Clinical Notes Area */}
+                    <div className="mt-6">
+                      <label className="block text-lg font-semibold text-gray-900 mb-3">Clinical Documentation</label>
+                      <textarea
+                        value={clinicalNotes}
+                        onChange={(e) => setClinicalNotes(e.target.value)}
+                        className="w-full h-80 px-6 py-4 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-4 focus:ring-green-200 focus:border-green-500 text-base leading-relaxed resize-none"
+                        placeholder="Document your clinical assessment here...
+
+History of Present Illness:
+- Onset:
+- Duration:
+- Character:
+- Associated symptoms:
+- Aggravating/alleviating factors:
+
+Physical Examination:
+- General appearance:
+- Vital signs:
+- System-specific findings:
+
+Clinical Impression:
+- Working diagnosis:
+- Differential considerations: "
+                        style={{ fontFamily: 'ui-monospace, SFMono-Regular, "SF Mono", Consolas, "Liberation Mono", Menlo, monospace' }}
+                      />
+                      <div className="mt-2 flex justify-between items-center text-sm text-gray-500">
+                        <span>💡 Use AI suggestions above to enhance your documentation</span>
+                        <span>{clinicalNotes.length} characters</span>
+                      </div>
+                    </div>
+
+                    <div className="mt-8 flex justify-between">
+                      <button
+                        onClick={() => setCurrentStep(1)}
+                        className="bg-gray-500 hover:bg-gray-600 text-white px-6 py-3 rounded-lg transition-colors flex items-center"
+                      >
+                        <Icons.ArrowLeft className="h-5 w-5 mr-2" />
+                        Back to History
+                      </button>
                       <button
                         onClick={() => {
-                          initializeSOAPNotes(selectedPatient);
-                          generatePatientHistory(selectedPatient);
+                          generateDifferentialDiagnoses();
+                          setCurrentStep(3);
                         }}
-                        className="w-full bg-purple-600 hover:bg-purple-700 text-white py-2 px-4 rounded-md transition-colors flex items-center justify-center"
+                        disabled={!clinicalNotes.trim() || isGeneratingDifferentials}
+                        className="bg-green-600 hover:bg-green-700 text-white px-8 py-3 rounded-lg transition-colors flex items-center disabled:opacity-50 text-lg font-medium"
                       >
-                        <Icons.FileText className="h-4 w-4 mr-2" />
-                        Start SOAP Documentation
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* AI-Generated Clinical Notes */}
-                  <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-4">AI Clinical Assessment</h3>
-                    <div className="space-y-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Generated Notes</label>
-                        <textarea
-                          value={doctorNotes}
-                          onChange={(e) => setDoctorNotes(e.target.value)}
-                          className="w-full h-40 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-                          placeholder="AI-generated clinical notes will appear here..."
-                        />
-                      </div>
-
-                      <button
-                        onClick={handleGeneratePrescription}
-                        disabled={isGeneratingPrescription || !doctorNotes.trim()}
-                        className="w-full bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded-md transition-colors flex items-center justify-center disabled:opacity-50"
-                      >
-                        {isGeneratingPrescription ? (
-                          <LoadingSpinner size="sm" text="Generating Prescription..." />
+                        {isGeneratingDifferentials ? (
+                          <LoadingSpinner size="sm" text="Generating..." />
                         ) : (
                           <>
-                            <Icons.FileText className="h-4 w-4 mr-2" />
-                            Generate Prescription
+                            Generate AI Differential Diagnosis
+                            <Icons.ArrowRight className="h-5 w-5 ml-2" />
                           </>
                         )}
                       </button>
                     </div>
                   </div>
-                </div>
+                )}
+
+                {/* Step 3: Differential Diagnosis Selection */}
+                {currentStep === 3 && (
+                  <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
+                    <div className="flex items-center mb-6">
+                      <div className="w-10 h-10 bg-orange-600 rounded-full flex items-center justify-center mr-4">
+                        <Icons.Search className="h-6 w-6 text-white" />
+                      </div>
+                      <div>
+                        <h3 className="text-2xl font-bold text-gray-900">Step 3: AI-Generated Differential Diagnosis</h3>
+                        <p className="text-gray-600">Review AI-suggested diagnoses and select the most appropriate</p>
+                      </div>
+                    </div>
+
+                    <div className="space-y-4">
+                      {differentialDiagnoses.map((diagnosis, index) => (
+                        <div
+                          key={index}
+                          className={`border-2 rounded-lg p-6 cursor-pointer transition-all ${
+                            selectedDiagnosis === diagnosis.diagnosis
+                              ? 'border-orange-500 bg-orange-50'
+                              : 'border-gray-200 hover:border-orange-300 hover:bg-orange-25'
+                          }`}
+                          onClick={() => setSelectedDiagnosis(diagnosis.diagnosis)}
+                        >
+                          <div className="flex items-center justify-between mb-3">
+                            <div className="flex items-center">
+                              <div className={`w-6 h-6 rounded-full border-2 mr-4 flex items-center justify-center ${
+                                selectedDiagnosis === diagnosis.diagnosis
+                                  ? 'border-orange-500 bg-orange-500'
+                                  : 'border-gray-300'
+                              }`}>
+                                {selectedDiagnosis === diagnosis.diagnosis && (
+                                  <Icons.CheckCircle className="h-4 w-4 text-white" />
+                                )}
+                              </div>
+                              <h4 className="text-lg font-semibold text-gray-900">{diagnosis.diagnosis}</h4>
+                            </div>
+                            <div className="flex items-center">
+                              <div className={`px-3 py-1 rounded-full text-sm font-medium ${
+                                diagnosis.confidence >= 70 ? 'bg-green-100 text-green-800' :
+                                diagnosis.confidence >= 50 ? 'bg-yellow-100 text-yellow-800' :
+                                'bg-red-100 text-red-800'
+                              }`}>
+                                {diagnosis.confidence}% confidence
+                              </div>
+                            </div>
+                          </div>
+                          <p className="text-gray-700 leading-relaxed">{diagnosis.reasoning}</p>
+                        </div>
+                      ))}
+                    </div>
+
+                    <div className="mt-8 flex justify-between">
+                      <button
+                        onClick={() => setCurrentStep(2)}
+                        className="bg-gray-500 hover:bg-gray-600 text-white px-6 py-3 rounded-lg transition-colors flex items-center"
+                      >
+                        <Icons.ArrowLeft className="h-5 w-5 mr-2" />
+                        Back to Documentation
+                      </button>
+                      <button
+                        onClick={() => {
+                          generateTreatmentPlan();
+                          setCurrentStep(4);
+                        }}
+                        disabled={!selectedDiagnosis || isGeneratingTreatment}
+                        className="bg-orange-600 hover:bg-orange-700 text-white px-8 py-3 rounded-lg transition-colors flex items-center disabled:opacity-50 text-lg font-medium"
+                      >
+                        {isGeneratingTreatment ? (
+                          <LoadingSpinner size="sm" text="Generating..." />
+                        ) : (
+                          <>
+                            Generate Treatment Plan
+                            <Icons.ArrowRight className="h-5 w-5 ml-2" />
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  </div>
+                )}
 
                 {/* Clinical Note Suggestions */}
                 {showSuggestions && (
@@ -714,6 +1167,204 @@ Notes generated at: ${new Date().toLocaleString()}`;
                         )}
                       </div>
                     )}
+                  </div>
+                )}
+
+                {/* Step 4: Treatment Plan & Medication Selection */}
+                {currentStep === 4 && (
+                  <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
+                    <div className="flex items-center mb-6">
+                      <div className="w-10 h-10 bg-purple-600 rounded-full flex items-center justify-center mr-4">
+                        <Icons.Pill className="h-6 w-6 text-white" />
+                      </div>
+                      <div>
+                        <h3 className="text-2xl font-bold text-gray-900">Step 4: AI-Assisted Treatment Plan</h3>
+                        <p className="text-gray-600">Review and customize evidence-based treatment recommendations</p>
+                      </div>
+                    </div>
+
+                    <div className="mb-6 bg-purple-50 rounded-lg p-4">
+                      <h4 className="font-semibold text-purple-900 mb-2">Selected Diagnosis</h4>
+                      <p className="text-purple-800 text-lg">{selectedDiagnosis}</p>
+                    </div>
+
+                    <div className="space-y-4">
+                      <h4 className="text-lg font-semibold text-gray-900">Recommended Medications</h4>
+                      {treatmentPlan.map((treatment, index) => (
+                        <div
+                          key={index}
+                          className={`border-2 rounded-lg p-6 transition-all ${
+                            treatment.selected
+                              ? 'border-purple-500 bg-purple-50'
+                              : 'border-gray-200 hover:border-purple-300'
+                          }`}
+                        >
+                          <div className="flex items-center justify-between mb-4">
+                            <div className="flex items-center">
+                              <input
+                                type="checkbox"
+                                checked={treatment.selected}
+                                onChange={(e) => {
+                                  const updatedPlan = [...treatmentPlan];
+                                  updatedPlan[index].selected = e.target.checked;
+                                  setTreatmentPlan(updatedPlan);
+                                }}
+                                className="w-5 h-5 text-purple-600 rounded mr-4"
+                              />
+                              <h5 className="text-lg font-semibold text-gray-900">{treatment.medication}</h5>
+                            </div>
+                            <div className="flex items-center space-x-4">
+                              <span className="bg-purple-100 text-purple-800 px-3 py-1 rounded-full text-sm font-medium">
+                                {treatment.dosage}
+                              </span>
+                              <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium">
+                                {treatment.frequency}
+                              </span>
+                              <span className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium">
+                                {treatment.duration}
+                              </span>
+                            </div>
+                          </div>
+                          <p className="text-gray-700 bg-white p-3 rounded border">{treatment.instructions}</p>
+                        </div>
+                      ))}
+                    </div>
+
+                    <div className="mt-8 flex justify-between">
+                      <button
+                        onClick={() => setCurrentStep(3)}
+                        className="bg-gray-500 hover:bg-gray-600 text-white px-6 py-3 rounded-lg transition-colors flex items-center"
+                      >
+                        <Icons.ArrowLeft className="h-5 w-5 mr-2" />
+                        Back to Diagnosis
+                      </button>
+                      <button
+                        onClick={() => setCurrentStep(5)}
+                        disabled={!treatmentPlan.some(t => t.selected)}
+                        className="bg-purple-600 hover:bg-purple-700 text-white px-8 py-3 rounded-lg transition-colors flex items-center disabled:opacity-50 text-lg font-medium"
+                      >
+                        Generate Prescription
+                        <Icons.ArrowRight className="h-5 w-5 ml-2" />
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {/* Step 5: Prescription Generation */}
+                {currentStep === 5 && (
+                  <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
+                    <div className="flex items-center mb-6">
+                      <div className="w-10 h-10 bg-green-600 rounded-full flex items-center justify-center mr-4">
+                        <Icons.CheckCircle className="h-6 w-6 text-white" />
+                      </div>
+                      <div>
+                        <h3 className="text-2xl font-bold text-gray-900">Step 5: Prescription Generation</h3>
+                        <p className="text-gray-600">Review and finalize prescription for patient</p>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                      {/* Prescription Summary */}
+                      <div className="space-y-6">
+                        <div className="bg-green-50 rounded-lg p-6">
+                          <h4 className="font-semibold text-green-900 mb-4">Prescription Summary</h4>
+                          <div className="space-y-4">
+                            <div>
+                              <span className="text-green-700 font-medium">Patient:</span>
+                              <span className="ml-2 text-green-900">{selectedPatient.patientName}</span>
+                            </div>
+                            <div>
+                              <span className="text-green-700 font-medium">Diagnosis:</span>
+                              <span className="ml-2 text-green-900">{selectedDiagnosis}</span>
+                            </div>
+                            <div>
+                              <span className="text-green-700 font-medium">Date:</span>
+                              <span className="ml-2 text-green-900">{new Date().toLocaleDateString()}</span>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="bg-blue-50 rounded-lg p-6">
+                          <h4 className="font-semibold text-blue-900 mb-4">Selected Medications</h4>
+                          <div className="space-y-3">
+                            {treatmentPlan.filter(t => t.selected).map((treatment, index) => (
+                              <div key={index} className="bg-white p-4 rounded border">
+                                <div className="font-medium text-blue-900">{treatment.medication} {treatment.dosage}</div>
+                                <div className="text-sm text-blue-700">{treatment.frequency} for {treatment.duration}</div>
+                                <div className="text-xs text-blue-600 mt-1">{treatment.instructions}</div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Patient Education & Follow-up */}
+                      <div className="space-y-6">
+                        <div className="bg-yellow-50 rounded-lg p-6">
+                          <h4 className="font-semibold text-yellow-900 mb-4">Patient Education</h4>
+                          <div className="space-y-2 text-sm text-yellow-800">
+                            <div>• Take medications as prescribed</div>
+                            <div>• Complete full course of treatment</div>
+                            <div>• Monitor for side effects</div>
+                            <div>• Return if symptoms worsen</div>
+                            <div>• Follow-up appointment in 1-2 weeks</div>
+                          </div>
+                        </div>
+
+                        <div className="bg-red-50 rounded-lg p-6">
+                          <h4 className="font-semibold text-red-900 mb-4">Drug Interaction Check</h4>
+                          <div className="space-y-2">
+                            <div className="flex items-center text-green-700">
+                              <Icons.CheckCircle className="h-4 w-4 mr-2" />
+                              <span className="text-sm">No major interactions detected</span>
+                            </div>
+                            <div className="flex items-center text-green-700">
+                              <Icons.CheckCircle className="h-4 w-4 mr-2" />
+                              <span className="text-sm">Allergy check passed</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="mt-8 flex justify-between">
+                      <button
+                        onClick={() => setCurrentStep(4)}
+                        className="bg-gray-500 hover:bg-gray-600 text-white px-6 py-3 rounded-lg transition-colors flex items-center"
+                      >
+                        <Icons.ArrowLeft className="h-5 w-5 mr-2" />
+                        Back to Treatment
+                      </button>
+                      <div className="flex space-x-4">
+                        <button
+                          onClick={handleGeneratePrescription}
+                          disabled={isGeneratingPrescription}
+                          className="bg-green-600 hover:bg-green-700 text-white px-8 py-3 rounded-lg transition-colors flex items-center disabled:opacity-50 text-lg font-medium"
+                        >
+                          {isGeneratingPrescription ? (
+                            <LoadingSpinner size="sm" text="Sending..." />
+                          ) : (
+                            <>
+                              <Icons.Send className="h-5 w-5 mr-2" />
+                              Send to Pharmacy
+                            </>
+                          )}
+                        </button>
+                        <button
+                          onClick={() => {
+                            setCurrentStep(1);
+                            setClinicalNotes('');
+                            setDifferentialDiagnoses([]);
+                            setSelectedDiagnosis('');
+                            setTreatmentPlan([]);
+                          }}
+                          className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg transition-colors flex items-center"
+                        >
+                          <Icons.Plus className="h-5 w-5 mr-2" />
+                          New Patient
+                        </button>
+                      </div>
+                    </div>
                   </div>
                 )}
 
@@ -1015,16 +1666,69 @@ Notes generated at: ${new Date().toLocaleString()}`;
                 )}
               </>
             ) : (
-              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8 text-center">
-                <Icons.Stethoscope className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">Select a Patient Case</h3>
-                <p className="text-gray-600 mb-4">Choose a patient from the cases list to access clinical tools and AI assistance.</p>
-                <button
-                  onClick={() => setActiveTab('patients')}
-                  className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md transition-colors"
-                >
-                  View Patient Cases
-                </button>
+              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
+                <div className="text-center mb-8">
+                  <Icons.Stethoscope className="h-16 w-16 text-blue-400 mx-auto mb-4" />
+                  <h3 className="text-2xl font-bold text-gray-900 mb-2">AI-Assisted Clinical Workflow</h3>
+                  <p className="text-gray-600 mb-4">Select a patient case to begin the 5-step clinical workflow with AI assistance</p>
+
+                  {/* Workflow Preview */}
+                  <div className="flex items-center justify-center space-x-4 mb-8">
+                    {[
+                      { step: 1, label: 'History', icon: Icons.Clock, color: 'bg-blue-100 text-blue-600' },
+                      { step: 2, label: 'Notes', icon: Icons.FileText, color: 'bg-green-100 text-green-600' },
+                      { step: 3, label: 'Diagnosis', icon: Icons.Search, color: 'bg-orange-100 text-orange-600' },
+                      { step: 4, label: 'Treatment', icon: Icons.Pill, color: 'bg-purple-100 text-purple-600' },
+                      { step: 5, label: 'Prescription', icon: Icons.CheckCircle, color: 'bg-green-100 text-green-600' }
+                    ].map(({ step, label, icon: Icon, color }, index) => (
+                      <div key={step} className="flex items-center">
+                        <div className={`w-12 h-12 rounded-full flex items-center justify-center ${color}`}>
+                          <Icon className="h-6 w-6" />
+                        </div>
+                        <div className="ml-2 text-center">
+                          <div className="text-xs font-medium text-gray-600">{step}</div>
+                          <div className="text-xs text-gray-500">{label}</div>
+                        </div>
+                        {index < 4 && <div className="w-8 h-0.5 bg-gray-300 mx-2" />}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {patientCases.map((patient) => (
+                    <div
+                      key={patient.id}
+                      onClick={() => {
+                        setSelectedPatient(patient);
+                        loadComprehensivePatientHistory(patient);
+                        setCurrentStep(1);
+                      }}
+                      className="p-6 border-2 border-gray-200 rounded-lg hover:border-blue-300 hover:bg-blue-50 cursor-pointer transition-all transform hover:scale-105"
+                    >
+                      <div className="flex items-center justify-between mb-3">
+                        <h5 className="font-semibold text-gray-900">{patient.patientName}</h5>
+                        <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                          patient.urgency === 'emergency' ? 'bg-red-100 text-red-800' :
+                          patient.urgency === 'urgent' ? 'bg-orange-100 text-orange-800' :
+                          'bg-green-100 text-green-800'
+                        }`}>
+                          {patient.urgency}
+                        </span>
+                      </div>
+                      <p className="text-sm text-gray-600 mb-3">Age: {patient.age}</p>
+                      <p className="text-sm text-gray-700 mb-4">{patient.symptoms}</p>
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs text-gray-500">
+                          {patient.appointmentTime.toLocaleTimeString()}
+                        </span>
+                        <div className="bg-blue-600 text-white px-3 py-1 rounded text-xs font-medium">
+                          Start Workflow
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
           </div>
